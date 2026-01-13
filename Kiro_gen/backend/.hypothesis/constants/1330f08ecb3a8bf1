@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\polly_generation\generator.py
+# hypothesis_version: 6.150.1
+
+[b'\x00', 0.5, 1.0, 2.5, 1024, 'Aria', 'Arthur', 'AudioStream', 'Brian', 'Emma', 'Ivy', 'Joanna', 'Joey', 'Justin', 'Kendra', 'Matthew', 'Salli', 'adult', 'child', 'error', 'female_adult', 'female_heroic', 'female_senior', 'female_young', 'heroic', 'male', 'male_adult', 'male_heroic', 'male_senior', 'male_young', 'mp3', 'neural', 'neutral', 'ogg_vorbis', 'senior', 'standard', 'unknown', 'voice_id', 'young', 'young-adult']

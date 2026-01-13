@@ -118,6 +118,8 @@ async def get_library(
             }
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting library: {e}")
         raise HTTPException(

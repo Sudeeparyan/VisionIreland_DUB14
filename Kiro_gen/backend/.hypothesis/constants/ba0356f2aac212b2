@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\config.py
+# hypothesis_version: 6.150.1
+
+[100, 8000, './storage/audio', '.env', '0.0.0.0', 'INFO', 'INTELLIGENT_TIERING', 'ignore', 'json', 'mp3', 'neural', 'us-east-1']

@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\bedrock_analysis\narrative_generator.py
+# hypothesis_version: 6.150.1
+
+[', ', '.', '\\bhad\\b', '\\bjumped\\b', '\\blaid\\b', '\\blooked\\b', '\\bran\\b', '\\bsat\\b', '\\bsaw\\b', '\\bshouted\\b', '\\bspoke\\b', '\\bstood\\b', '\\bwalked\\b', '\\bwas\\b', '\\bwas\\s+\\w+ed\\b', '\\bwatched\\b', '\\bwere\\b', '\\bwhispered\\b', 'above', 'are', 'behind', 'below', 'center', 'front', 'has', 'has_spatial_details', 'is', 'is_valid', 'issues', 'jumps', 'left', 'length', 'lies', 'looks', 'right', 'runs', 'sees', 'shouts', 'sits', 'speaks', 'stands', 'walks', 'watches', 'whispers']
