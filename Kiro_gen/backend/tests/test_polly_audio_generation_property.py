@@ -36,11 +36,13 @@ def valid_text_strategy(draw):
             ),
             min_size=1,
             max_size=20
-        ),
+        ).filter(lambda x: x.strip()),  # Ensure non-whitespace words
         min_size=1,
         max_size=500
     ))
-    return " ".join(words)
+    text = " ".join(words)
+    # Ensure the final text is not just whitespace
+    return text if text.strip() else "Valid narrative text"
 
 
 @st.composite

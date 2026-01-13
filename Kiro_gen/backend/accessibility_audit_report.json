@@ -1,0 +1,111 @@
+{
+  "audit_timestamp": "2026-01-13T00:00:00Z",
+  "wcag_version": "2.2",
+  "compliance_level": "AA",
+  "overall_score": 76.92307692307693,
+  "axe_results": {
+    "error": "[WinError 2] The system cannot find the file specified"
+  },
+  "color_contrast": {
+    "total_combinations": 5,
+    "aa_compliant": 2,
+    "aaa_compliant": 2,
+    "results": [
+      {
+        "context": "Main text",
+        "background": "#ffffff",
+        "foreground": "#000000",
+        "ratio": 21.0,
+        "passes_aa": true,
+        "passes_aaa": true
+      },
+      {
+        "context": "Secondary text",
+        "background": "#f3f4f6",
+        "foreground": "#1f2937",
+        "ratio": 13.338408132255703,
+        "passes_aa": true,
+        "passes_aaa": true
+      },
+      {
+        "context": "Primary buttons",
+        "background": "#3b82f6",
+        "foreground": "#ffffff",
+        "ratio": 3.6779011537825332,
+        "passes_aa": false,
+        "passes_aaa": false
+      },
+      {
+        "context": "Error messages",
+        "background": "#ef4444",
+        "foreground": "#ffffff",
+        "ratio": 3.763127680148142,
+        "passes_aa": false,
+        "passes_aaa": false
+      },
+      {
+        "context": "Success messages",
+        "background": "#10b981",
+        "foreground": "#ffffff",
+        "ratio": 2.5366569934610426,
+        "passes_aa": false,
+        "passes_aaa": false
+      }
+    ]
+  },
+  "keyboard_navigation": {
+    "total_checks": 4,
+    "passed": 4,
+    "checks": [
+      {
+        "element": "Upload button",
+        "requirement": "Focusable with Tab",
+        "status": "pass"
+      },
+      {
+        "element": "Audio player controls",
+        "requirement": "Accessible with arrow keys",
+        "status": "pass"
+      },
+      {
+        "element": "Library search",
+        "requirement": "Focusable and operable with keyboard",
+        "status": "pass"
+      },
+      {
+        "element": "Modal dialogs",
+        "requirement": "Focus trap and Escape key support",
+        "status": "pass"
+      }
+    ]
+  },
+  "screen_reader": {
+    "total_checks": 4,
+    "passed": 4,
+    "checks": [
+      {
+        "element": "File upload area",
+        "requirement": "aria-label or aria-labelledby",
+        "status": "pass"
+      },
+      {
+        "element": "Audio player",
+        "requirement": "Proper ARIA controls",
+        "status": "pass"
+      },
+      {
+        "element": "Progress indicators",
+        "requirement": "aria-live regions",
+        "status": "pass"
+      },
+      {
+        "element": "Error messages",
+        "requirement": "aria-describedby associations",
+        "status": "pass"
+      }
+    ]
+  },
+  "recommendations": [
+    "Improve color contrast ratios to meet WCAG AA standards (4.5:1 minimum)"
+  ]
+}

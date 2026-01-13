@@ -2,6 +2,7 @@
 
 from .batch_processor import BatchProcessor, BatchJob, BatchStatus
 from .cache_manager import CacheManager, CacheEntry
+from .pipeline_orchestrator import PipelineOrchestrator
 
 __all__ = [
     'BatchProcessor',
@@ -9,4 +10,5 @@ __all__ = [
     'BatchStatus',
     'CacheManager',
     'CacheEntry',
+    'PipelineOrchestrator',
 ]

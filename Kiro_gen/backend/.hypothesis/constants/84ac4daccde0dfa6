@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\pdf_processing\pipeline.py
+# hypothesis_version: 6.150.1
+
+[100, 1024, '.pdf', 'author', 'extraction_time', 'image_format', 'title', 'total_panels', 'total_size_bytes']

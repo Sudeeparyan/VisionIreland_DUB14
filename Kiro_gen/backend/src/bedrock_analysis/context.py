@@ -186,6 +186,22 @@ class ContextManager:
         """Get the full context"""
         return self.context
 
+    def get_known_characters(self) -> Dict[str, Character]:
+        """Get all known characters for context"""
+        return self.get_all_characters()
+
+    def get_current_scene(self) -> Optional[Scene]:
+        """Get the most recently seen scene"""
+        if not self.context.scenes:
+            return None
+        
+        # Return the scene with the highest last_seen panel number
+        latest_scene = max(
+            self.context.scenes.values(),
+            key=lambda s: s.last_seen
+        )
+        return latest_scene
+
     def reset(self) -> None:
         """Reset context for new comic"""
         self.context = BedrockAnalysisContext()

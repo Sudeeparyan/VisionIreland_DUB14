@@ -1,0 +1,345 @@
+{
+  "audit_timestamp": "2026-01-13T00:00:00Z",
+  "security_score": 0,
+  "total_findings": 30,
+  "findings_by_severity": {
+    "critical": 3,
+    "high": 10,
+    "medium": 16,
+    "low": 1
+  },
+  "critical_findings": [
+    {
+      "title": "File upload security: malware_scanning",
+      "description": "Scan uploaded files for malware",
+      "recommendation": "Implement malware_scanning in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "title": "API Security: authentication_required",
+      "description": "All API endpoints should require authentication",
+      "recommendation": "Implement JWT or API key authentication",
+      "component": "API Layer"
+    },
+    {
+      "title": "S3 Configuration: bucket_public_access",
+      "description": "Ensure S3 buckets are not publicly accessible",
+      "recommendation": "Block all public access to S3 buckets",
+      "component": "S3 Configuration"
+    }
+  ],
+  "high_priority_findings": [
+    {
+      "title": "S3 bucket access should be restricted to specific buckets",
+      "description": "S3 permissions should be limited to application-specific buckets only",
+      "recommendation": "Restrict S3 access to 'comic-audio-narrator-*' buckets only",
+      "component": "S3 IAM Policy"
+    },
+    {
+      "title": "File upload security: file_extension_validation",
+      "description": "Validate file extensions against allowlist",
+      "recommendation": "Implement file_extension_validation in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "title": "File upload security: mime_type_validation",
+      "description": "Validate MIME types, not just extensions",
+      "recommendation": "Implement mime_type_validation in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "title": "API Security: rate_limiting",
+      "description": "Implement rate limiting to prevent abuse",
+      "recommendation": "Add rate limiting middleware (e.g., 100 requests/minute per user)",
+      "component": "API Layer"
+    },
+    {
+      "title": "API Security: input_validation",
+      "description": "Validate and sanitize all API inputs",
+      "recommendation": "Use input validation schemas and sanitization",
+      "component": "API Layer"
+    },
+    {
+      "title": "API Security: https_enforcement",
+      "description": "Enforce HTTPS for all API communications",
+      "recommendation": "Redirect HTTP to HTTPS and use HSTS headers",
+      "component": "API Layer"
+    },
+    {
+      "title": "Data Protection: encryption_at_rest",
+      "description": "Encrypt sensitive data at rest in S3",
+      "recommendation": "Enable S3 server-side encryption (SSE-S3 or SSE-KMS)",
+      "component": "Data Layer"
+    },
+    {
+      "title": "Data Protection: encryption_in_transit",
+      "description": "Encrypt data in transit",
+      "recommendation": "Use TLS 1.2+ for all communications",
+      "component": "Data Layer"
+    },
+    {
+      "title": "S3 Configuration: bucket_encryption",
+      "description": "Enable default encryption on S3 buckets",
+      "recommendation": "Enable default server-side encryption",
+      "component": "S3 Configuration"
+    },
+    {
+      "title": "Use AWS Secrets Manager or Parameter Store for secrets",
+      "description": "Avoid hardcoding secrets in configuration files or code",
+      "recommendation": "Store secrets in AWS Secrets Manager or Systems Manager Parameter Store",
+      "component": "Configuration Management"
+    }
+  ],
+  "all_findings": [
+    {
+      "severity": "medium",
+      "category": "iam_permissions",
+      "title": "Potentially overpermissive IAM policy: Wildcard permissions",
+      "description": "IAM policy may contain overly broad permissions: Wildcard permissions",
+      "recommendation": "Use principle of least privilege - grant only necessary permissions",
+      "component": "IAM Policy"
+    },
+    {
+      "severity": "medium",
+      "category": "iam_permissions",
+      "title": "Potentially overpermissive IAM policy: Full S3 access",
+      "description": "IAM policy may contain overly broad permissions: Full S3 access",
+      "recommendation": "Use principle of least privilege - grant only necessary permissions",
+      "component": "IAM Policy"
+    },
+    {
+      "severity": "medium",
+      "category": "iam_permissions",
+      "title": "Potentially overpermissive IAM policy: Full Bedrock access",
+      "description": "IAM policy may contain overly broad permissions: Full Bedrock access",
+      "recommendation": "Use principle of least privilege - grant only necessary permissions",
+      "component": "IAM Policy"
+    },
+    {
+      "severity": "medium",
+      "category": "iam_permissions",
+      "title": "Potentially overpermissive IAM policy: Full Polly access",
+      "description": "IAM policy may contain overly broad permissions: Full Polly access",
+      "recommendation": "Use principle of least privilege - grant only necessary permissions",
+      "component": "IAM Policy"
+    },
+    {
+      "severity": "high",
+      "category": "iam_permissions",
+      "title": "S3 bucket access should be restricted to specific buckets",
+      "description": "S3 permissions should be limited to application-specific buckets only",
+      "recommendation": "Restrict S3 access to 'comic-audio-narrator-*' buckets only",
+      "component": "S3 IAM Policy"
+    },
+    {
+      "severity": "high",
+      "category": "file_upload",
+      "title": "File upload security: file_extension_validation",
+      "description": "Validate file extensions against allowlist",
+      "recommendation": "Implement file_extension_validation in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "severity": "medium",
+      "category": "file_upload",
+      "title": "File upload security: file_size_limits",
+      "description": "Enforce maximum file size limits",
+      "recommendation": "Implement file_size_limits in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "severity": "high",
+      "category": "file_upload",
+      "title": "File upload security: mime_type_validation",
+      "description": "Validate MIME types, not just extensions",
+      "recommendation": "Implement mime_type_validation in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "severity": "critical",
+      "category": "file_upload",
+      "title": "File upload security: malware_scanning",
+      "description": "Scan uploaded files for malware",
+      "recommendation": "Implement malware_scanning in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "severity": "medium",
+      "category": "file_upload",
+      "title": "File upload security: file_content_validation",
+      "description": "Validate file content matches expected format",
+      "recommendation": "Implement file_content_validation in file upload handler",
+      "component": "File Upload Handler"
+    },
+    {
+      "severity": "medium",
+      "category": "file_upload",
+      "title": "Uploaded files should be stored outside web root",
+      "description": "Uploaded files should not be directly accessible via web URLs",
+      "recommendation": "Store uploaded files in secure location outside web root",
+      "component": "File Storage"
+    },
+    {
+      "severity": "critical",
+      "category": "api_security",
+      "title": "API Security: authentication_required",
+      "description": "All API endpoints should require authentication",
+      "recommendation": "Implement JWT or API key authentication",
+      "component": "API Layer"
+    },
+    {
+      "severity": "high",
+      "category": "api_security",
+      "title": "API Security: rate_limiting",
+      "description": "Implement rate limiting to prevent abuse",
+      "recommendation": "Add rate limiting middleware (e.g., 100 requests/minute per user)",
+      "component": "API Layer"
+    },
+    {
+      "severity": "high",
+      "category": "api_security",
+      "title": "API Security: input_validation",
+      "description": "Validate and sanitize all API inputs",
+      "recommendation": "Use input validation schemas and sanitization",
+      "component": "API Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "api_security",
+      "title": "API Security: cors_configuration",
+      "description": "Configure CORS properly for web interface",
+      "recommendation": "Set specific allowed origins, not wildcard (*)",
+      "component": "API Layer"
+    },
+    {
+      "severity": "high",
+      "category": "api_security",
+      "title": "API Security: https_enforcement",
+      "description": "Enforce HTTPS for all API communications",
+      "recommendation": "Redirect HTTP to HTTPS and use HSTS headers",
+      "component": "API Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "api_security",
+      "title": "API Security: error_handling",
+      "description": "Don't expose sensitive information in error messages",
+      "recommendation": "Use generic error messages and log details server-side",
+      "component": "API Layer"
+    },
+    {
+      "severity": "high",
+      "category": "data_protection",
+      "title": "Data Protection: encryption_at_rest",
+      "description": "Encrypt sensitive data at rest in S3",
+      "recommendation": "Enable S3 server-side encryption (SSE-S3 or SSE-KMS)",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "high",
+      "category": "data_protection",
+      "title": "Data Protection: encryption_in_transit",
+      "description": "Encrypt data in transit",
+      "recommendation": "Use TLS 1.2+ for all communications",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "data_protection",
+      "title": "Data Protection: data_retention_policy",
+      "description": "Implement data retention and deletion policies",
+      "recommendation": "Define retention periods and automated cleanup",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "data_protection",
+      "title": "Data Protection: pii_handling",
+      "description": "Minimize collection and storage of PII",
+      "recommendation": "Avoid storing unnecessary personal information",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "data_protection",
+      "title": "Data Protection: audit_logging",
+      "description": "Log security-relevant events",
+      "recommendation": "Implement comprehensive audit logging",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "medium",
+      "category": "data_protection",
+      "title": "Data Protection: backup_security",
+      "description": "Secure backup and recovery procedures",
+      "recommendation": "Encrypt backups and test recovery procedures",
+      "component": "Data Layer"
+    },
+    {
+      "severity": "critical",
+      "category": "aws_configuration",
+      "title": "S3 Configuration: bucket_public_access",
+      "description": "Ensure S3 buckets are not publicly accessible",
+      "recommendation": "Block all public access to S3 buckets",
+      "component": "S3 Configuration"
+    },
+    {
+      "severity": "medium",
+      "category": "aws_configuration",
+      "title": "S3 Configuration: bucket_versioning",
+      "description": "Enable S3 bucket versioning for data protection",
+      "recommendation": "Enable versioning on S3 buckets",
+      "component": "S3 Configuration"
+    },
+    {
+      "severity": "low",
+      "category": "aws_configuration",
+      "title": "S3 Configuration: bucket_logging",
+      "description": "Enable S3 access logging",
+      "recommendation": "Enable S3 server access logging",
+      "component": "S3 Configuration"
+    },
+    {
+      "severity": "high",
+      "category": "aws_configuration",
+      "title": "S3 Configuration: bucket_encryption",
+      "description": "Enable default encryption on S3 buckets",
+      "recommendation": "Enable default server-side encryption",
+      "component": "S3 Configuration"
+    },
+    {
+      "severity": "medium",
+      "category": "aws_configuration",
+      "title": "Enable CloudWatch monitoring and alerting",
+      "description": "Monitor AWS service usage and set up security alerts",
+      "recommendation": "Configure CloudWatch alarms for unusual activity patterns",
+      "component": "CloudWatch Configuration"
+    },
+    {
+      "severity": "high",
+      "category": "secrets_management",
+      "title": "Use AWS Secrets Manager or Parameter Store for secrets",
+      "description": "Avoid hardcoding secrets in configuration files or code",
+      "recommendation": "Store secrets in AWS Secrets Manager or Systems Manager Parameter Store",
+      "component": "Configuration Management"
+    },
+    {
+      "severity": "medium",
+      "category": "secrets_management",
+      "title": "Rotate credentials regularly",
+      "description": "Implement regular credential rotation",
+      "recommendation": "Set up automated credential rotation for AWS access keys",
+      "component": "Credential Management"
+    }
+  ],
+  "security_recommendations": [
+    "Implement comprehensive input validation and sanitization",
+    "Use AWS IAM roles with least privilege principle",
+    "Enable encryption at rest and in transit for all data",
+    "Implement proper authentication and authorization",
+    "Set up monitoring and alerting for security events",
+    "Regular security audits and penetration testing",
+    "Keep all dependencies and frameworks updated",
+    "Implement proper error handling without information disclosure"
+  ]
+}

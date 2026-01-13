@@ -1,0 +1,5 @@
+bedrock_analysis
+pdf_processing
+polly_generation
+processing
+storage

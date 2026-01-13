@@ -76,12 +76,12 @@ class PDFExtractor:
 
         return True, None
 
-    def extract_panels(self, file_path: Path, title: Optional[str] = None) -> Tuple[List[Panel], ComicMetadata]:
+    def extract_panels(self, file_path, title: Optional[str] = None) -> Tuple[List[Panel], ComicMetadata]:
         """
         Extract all panels from a PDF file as images
 
         Args:
-            file_path: Path to the PDF file
+            file_path: Path to the PDF file (string or Path object)
             title: Optional title for the comic (extracted from filename if not provided)
 
         Returns:
@@ -90,6 +90,10 @@ class PDFExtractor:
         Raises:
             PDFExtractionError: If extraction fails
         """
+        # Convert string path to Path object if needed
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+            
         # Validate file
         is_valid, error_msg = self.validate_file(file_path)
         if not is_valid:

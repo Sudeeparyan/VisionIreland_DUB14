@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\storage\models.py
+# hypothesis_version: 6.150.1
+
+['AudioMetadata', 'LibraryIndex', 'StoredAudio', 'file_size', 'generated_at', 'id', 'items', 'last_updated', 'local_path', 'metadata', 's3_key', 'total_size', 'uploaded_at']

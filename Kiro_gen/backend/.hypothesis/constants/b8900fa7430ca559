@@ -1,0 +1,4 @@
+# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\storage\library_manager.py
+# hypothesis_version: 6.150.1
+
+[1.0, 1024, '.mp3', '/', 'exported_at', 'integrity_score', 'items', 'last_updated', 'library_stats', 'metadata_errors', 'missing_local', 'missing_s3', 'total_items', 'total_size_mb', 'unique_characters', 'unique_scenes', 'valid_items']

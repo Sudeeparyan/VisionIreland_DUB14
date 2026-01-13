@@ -187,6 +187,50 @@ class PollyAudioGenerator:
 
         return composite
 
+    def generate_audio_segments(self, narratives: List[str], voice_profiles: List[dict]) -> List[AudioSegment]:
+        """
+        Generate audio segments for multiple narratives.
+
+        Args:
+            narratives: List of narrative texts
+            voice_profiles: List of voice profile dictionaries with voice_id and engine
+
+        Returns:
+            List of AudioSegment objects
+        """
+        if len(narratives) != len(voice_profiles):
+            raise ValueError("Number of narratives must match number of voice profiles")
+        
+        segments = []
+        
+        for i, (narrative, voice_profile) in enumerate(zip(narratives, voice_profiles)):
+            try:
+                # Create audio generation request
+                request = AudioGenerationRequest(
+                    text=narrative,
+                    voice_id=voice_profile.get('voice_id', 'Joanna'),
+                    engine='neural' if self.use_neural else 'standard',
+                    output_format='mp3',
+                    panel_id=f'panel_{i+1}'
+                )
+                
+                # Generate audio segment
+                segment = self.generate_audio(request)
+                segments.append(segment)
+                
+            except Exception as e:
+                # Create silent segment for failed generation
+                silent_segment = AudioSegment(
+                    panel_id=f'panel_{i+1}',
+                    audio_data=b'\x00' * 1024,  # Silent audio data
+                    duration=1.0,
+                    voice_id=voice_profile.get('voice_id', 'error'),
+                    engine='standard'
+                )
+                segments.append(silent_segment)
+        
+        return segments
+
     def reset_segments(self) -> None:
         """Clear stored segments for new comic"""
         self.segments = []
