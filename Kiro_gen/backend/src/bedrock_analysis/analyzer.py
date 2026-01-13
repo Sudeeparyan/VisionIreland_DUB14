@@ -34,44 +34,35 @@ class BedrockPanelAnalyzer:
         self.context = BedrockAnalysisContext()
 
     def analyze_panel(
-        self, panel_id: str, image_data: bytes, sequence_number: int
-    ) -> PanelNarrative:
+        self, panel_id: str, image_data: str, image_format: str = 'png', context=None
+    ) -> dict:
         """
         Analyze a single panel image using Bedrock vision capabilities.
 
         Args:
             panel_id: Unique identifier for the panel
-            image_data: Raw image bytes of the panel
-            sequence_number: Sequential position of panel in comic
+            image_data: Base64-encoded image data
+            image_format: Image format (png, jpeg)
+            context: Optional analysis context
 
         Returns:
-            PanelNarrative with visual analysis and generated description
+            Dictionary with visual analysis results
         """
-        # Encode image to base64 for Bedrock
-        image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
-
         # Create vision analysis prompt
-        analysis_prompt = self._create_analysis_prompt(sequence_number)
+        analysis_prompt = self._create_analysis_prompt(context)
 
         # Call Bedrock with vision capabilities
         visual_analysis = self._call_bedrock_vision(
-            image_base64, analysis_prompt
+            image_data, analysis_prompt, image_format
         )
 
-        # Generate narrative based on visual analysis
-        narrative = self._generate_narrative(
-            panel_id, visual_analysis, sequence_number
-        )
+        return visual_analysis
 
-        return narrative
-
-    def _create_analysis_prompt(self, sequence_number: int) -> str:
+    def _create_analysis_prompt(self, context=None) -> str:
         """Create a prompt for Bedrock to analyze panel visuals"""
-        context_info = self._format_context_for_prompt()
+        context_info = self._format_context_for_prompt(context)
 
         prompt = f"""Analyze this comic panel image and provide detailed visual analysis.
-
-Panel Position: {sequence_number}
 
 Current Story Context:
 {context_info}
@@ -88,30 +79,45 @@ Please analyze the panel and provide:
 
 Format your response as JSON with these exact keys:
 {{
-    "characters": ["character descriptions"],
+    "characters": [
+        {{"name": "character name", "visual_description": "appearance", "personality": "inferred personality"}}
+    ],
     "objects": ["object list"],
     "spatial_layout": "description of spatial relationships",
     "colors": ["color palette"],
     "mood": "emotional tone",
-    "scene": "location description",
-    "action": "action description",
-    "dialogue": ["dialogue text from speech bubbles"]
+    "scene": {{
+        "location": "location name",
+        "visual_description": "scene description",
+        "time_of_day": "time if identifiable",
+        "atmosphere": "atmosphere/mood",
+        "color_palette": ["colors"],
+        "lighting": "lighting description"
+    }},
+    "action_description": "action description",
+    "dialogue": [
+        {{"character": "character name", "text": "dialogue text", "emotion": "emotion if apparent"}}
+    ]
 }}"""
 
         return prompt
 
-    def _call_bedrock_vision(self, image_base64: str, prompt: str) -> dict:
+    def _call_bedrock_vision(self, image_base64: str, prompt: str, image_format: str = 'png') -> dict:
         """
         Call Bedrock with vision analysis request.
 
         Args:
             image_base64: Base64-encoded image data
             prompt: Analysis prompt for the model
+            image_format: Image format (png, jpeg)
 
         Returns:
             Dictionary with visual analysis results
         """
         try:
+            # Determine media type
+            media_type = f"image/{image_format}" if image_format else "image/png"
+            
             # Prepare message with image
             message = {
                 "role": "user",
@@ -120,7 +126,7 @@ Format your response as JSON with these exact keys:
                         "type": "image",
                         "source": {
                             "type": "base64",
-                            "media_type": "image/jpeg",
+                            "media_type": media_type,
                             "data": image_base64,
                         },
                     },
@@ -156,122 +162,41 @@ Format your response as JSON with these exact keys:
             "spatial_layout": "Unable to analyze spatial layout",
             "colors": [],
             "mood": "neutral",
-            "scene": "Unknown location",
-            "action": "Action unclear",
+            "scene": {
+                "location": "Unknown location",
+                "visual_description": "Unable to analyze scene",
+                "time_of_day": None,
+                "atmosphere": None,
+                "color_palette": [],
+                "lighting": None
+            },
+            "action_description": "Action unclear",
             "dialogue": [],
         }
 
-    def _format_context_for_prompt(self) -> str:
+    def _format_context_for_prompt(self, context=None) -> str:
         """Format current story context for the analysis prompt"""
+        if context is None:
+            return "No prior context (first panel)"
+        
         context_lines = []
 
-        if self.context.characters:
+        if context.characters:
             context_lines.append("Known Characters:")
-            for char_id, char in self.context.characters.items():
+            for char_id, char in context.characters.items():
                 context_lines.append(
                     f"  - {char.name}: {char.visual_description}"
                 )
 
-        if self.context.scenes:
+        if context.scenes:
             context_lines.append("Known Scenes:")
-            for scene_id, scene in self.context.scenes.items():
+            for scene_id, scene in context.scenes.items():
                 context_lines.append(f"  - {scene.location}: {scene.visual_description}")
 
         if not context_lines:
             context_lines.append("No prior context (first panel)")
 
         return "\n".join(context_lines)
-
-    def _generate_narrative(
-        self, panel_id: str, visual_analysis: dict, sequence_number: int
-    ) -> PanelNarrative:
-        """
-        Generate narrative from visual analysis results.
-
-        Args:
-            panel_id: Panel identifier
-            visual_analysis: Results from Bedrock vision analysis
-            sequence_number: Panel position in comic
-
-        Returns:
-            PanelNarrative with generated description
-        """
-        # Create VisualAnalysis object
-        visual = VisualAnalysis(
-            characters=visual_analysis.get("characters", []),
-            objects=visual_analysis.get("objects", []),
-            spatial_layout=visual_analysis.get("spatial_layout", ""),
-            colors=visual_analysis.get("colors", []),
-            mood=visual_analysis.get("mood", "neutral"),
-        )
-
-        # Extract dialogue
-        dialogue_lines = []
-        for dialogue_text in visual_analysis.get("dialogue", []):
-            dialogue_lines.append(
-                DialogueLine(character_id="unknown", text=dialogue_text)
-            )
-
-        # Create narrative
-        narrative = PanelNarrative(
-            panel_id=panel_id,
-            visual_analysis=visual,
-            action_description=visual_analysis.get("action", ""),
-            dialogue=dialogue_lines,
-            scene_description=visual_analysis.get("scene"),
-        )
-
-        # Generate full audio description
-        narrative.audio_description = self._compose_audio_description(
-            narrative, sequence_number
-        )
-
-        return narrative
-
-    def _compose_audio_description(
-        self, narrative: PanelNarrative, sequence_number: int
-    ) -> str:
-        """
-        Compose professional audio description from narrative components.
-
-        Args:
-            narrative: Panel narrative with visual analysis
-            sequence_number: Panel position
-
-        Returns:
-            Professional audio description text
-        """
-        description_parts = []
-
-        # Add scene description if new scene
-        if narrative.scene_description:
-            description_parts.append(narrative.scene_description)
-
-        # Add action description
-        if narrative.action_description:
-            description_parts.append(narrative.action_description)
-
-        # Add dialogue
-        for dialogue in narrative.dialogue:
-            description_parts.append(f'"{dialogue.text}"')
-
-        return " ".join(description_parts)
-
-    def update_context(self, narrative: PanelNarrative) -> None:
-        """
-        Update analysis context based on panel narrative.
-
-        Args:
-            narrative: Panel narrative to incorporate into context
-        """
-        # Update character context
-        for character_update in narrative.character_updates:
-            self.context.characters[character_update.id] = character_update
-
-        # Update scene context
-        if narrative.scene_description:
-            # Scene tracking would be implemented here
-            pass
 
     def get_context(self) -> BedrockAnalysisContext:
         """Get current analysis context"""

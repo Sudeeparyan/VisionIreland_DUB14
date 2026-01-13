@@ -7,4 +7,16 @@ comic_audio_narrator_backend.egg-info/top_level.txt
 src/__init__.py
 src/aws_clients.py
 src/config.py
+tests/test_audio_description_context_property.py
+tests/test_audio_description_spatial_details_property.py
+tests/test_audio_description_tense_voice_property.py
+tests/test_character_description_nonrepetition_property.py
+tests/test_character_identification_unit.py
+tests/test_character_voice_consistency_property.py
+tests/test_dialogue_integration_property.py
+tests/test_emotional_conveyance_property.py
 tests/test_pdf_extraction_property.py
+tests/test_pdf_extraction_unit.py
+tests/test_scene_reference_consistency_property.py
+tests/test_story_continuity_property.py
+tests/test_voice_profile_assignment_property.py

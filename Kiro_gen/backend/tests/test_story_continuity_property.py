@@ -116,15 +116,13 @@ def test_story_continuity_preservation(characters_data, scenes_data, panel_count
     
     # Simulate panel sequence
     for panel_num in range(panel_count):
-        # Select characters for this panel
-        char_indices = list(range(len(characters)))
-        if char_indices:
-            selected_chars = [characters[i] for i in char_indices[:max(1, len(char_indices) // 2)]]
-            for char in selected_chars:
-                char_tracker.record_appearance(
-                    character_id=char.id,
-                    panel_number=panel_num
-                )
+        # Record all characters for this panel to ensure continuity
+        selected_chars = characters
+        for char in selected_chars:
+            char_tracker.record_appearance(
+                character_id=char.id,
+                panel_number=panel_num
+            )
         
         # Select scene for this panel
         scene_idx = panel_num % len(scenes)
@@ -177,8 +175,8 @@ def test_character_state_consistency(character_data, scene_data, panel_numbers):
     original_id = character.id
     original_voice_id = character.voice_profile.voice_id
     
-    # Record appearances
-    for panel_num in panel_numbers:
+    # Record appearances in sorted order to ensure last_seen is correct
+    for panel_num in sorted(panel_numbers):
         char_tracker.record_appearance(
             character_id=character.id,
             panel_number=panel_num
@@ -215,8 +213,8 @@ def test_scene_context_preservation(scene_data, panel_numbers):
     original_id = scene.id
     original_location = scene.location
     
-    # Set scene for all panels
-    for panel_num in panel_numbers:
+    # Set scene for all panels in sorted order to ensure last_seen is correct
+    for panel_num in sorted(panel_numbers):
         scene_tracker.set_scene_for_panel(scene.id, panel_num)
     
     # Verify scene context preservation

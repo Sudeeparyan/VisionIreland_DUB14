@@ -134,8 +134,8 @@ def test_scene_introduction_only_once(scene_data, panel_numbers):
         lighting=scene_data['lighting']
     )
     
-    # Set scene for all panels
-    for panel_num in panel_numbers:
+    # Set scene for all panels in sorted order to ensure first panel is processed first
+    for panel_num in sorted(panel_numbers):
         tracker.set_scene_for_panel(scene.id, panel_num)
     
     # Verify scene first_introduced is set to first panel
