@@ -1,0 +1,4 @@
+# file: /Users/endakenn/Demos-All/Barriers/VisionIreland_DUB14/Kiro_gen/backend/src/bedrock_analysis/scene_tracker.py
+# hypothesis_version: 6.150.1
+
+['Scene tracker reset', 'appearance_span', 'atmosphere', 'color_palette', 'first_introduced', 'id', 'last_seen', 'lighting', 'location', 'time_of_day', 'visual_description']
