@@ -1,0 +1,4 @@
+# file: /Users/endakenn/Demos-All/Barriers/VisionIreland_DUB14/Kiro_gen/backend/src/storage/local_manager.py
+# hypothesis_version: 6.150.1
+
+['*.mp3', 'audio', 'library_index.json', 'metadata', 'r', 'rb', 'w', 'wb']
