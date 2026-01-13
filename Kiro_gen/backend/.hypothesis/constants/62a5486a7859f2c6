@@ -1,0 +1,4 @@
+# file: /Users/endakenn/Demos-All/Barriers/backend/src/aws_clients.py
+# hypothesis_version: 6.150.1
+
+['AWSClients', 'bedrock-runtime', 'polly', 's3']

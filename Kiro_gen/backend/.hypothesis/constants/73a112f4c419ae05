@@ -1,0 +1,4 @@
+# file: /Users/endakenn/Demos-All/Barriers/backend/src/bedrock_analysis/analyzer.py
+# hypothesis_version: 6.150.1
+
+[0.7, 2048, 'Action unclear', 'Known Characters:', 'Known Scenes:', 'Unknown location', 'action', 'amazon.nova-pro-v1:0', 'base64', 'characters', 'colors', 'content', 'data', 'dialogue', 'image', 'image/jpeg', 'maxTokens', 'media_type', 'message', 'mood', 'neutral', 'objects', 'output', 'role', 'scene', 'source', 'spatial_layout', 'temperature', 'text', 'type', 'unknown', 'user', 'utf-8']

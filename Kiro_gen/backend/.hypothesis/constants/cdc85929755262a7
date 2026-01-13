@@ -1,0 +1,4 @@
+# file: /Users/endakenn/Demos-All/Barriers/backend/src/bedrock_analysis/character_tracker.py
+# hypothesis_version: 6.150.1
+
+['age', 'appearance_count', 'first_introduced', 'gender', 'id', 'last_seen', 'name', 'personality', 'tone', 'visual_description', 'visual_signatures', 'voice_id', 'voice_profile']
