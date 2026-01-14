@@ -1,4 +1,9 @@
 pyproject.toml
+src/api/__init__.py
+src/api/audio.py
+src/api/jobs.py
+src/api/library.py
+src/api/upload.py
 src/bedrock_analysis/__init__.py
 src/bedrock_analysis/analyzer.py
 src/bedrock_analysis/character_identifier.py
@@ -13,6 +18,13 @@ src/comic_audio_narrator_backend.egg-info/SOURCES.txt
 src/comic_audio_narrator_backend.egg-info/dependency_links.txt
 src/comic_audio_narrator_backend.egg-info/requires.txt
 src/comic_audio_narrator_backend.egg-info/top_level.txt
+src/error_handling/__init__.py
+src/error_handling/fallback_handler.py
+src/error_handling/retry_handler.py
+src/monitoring/__init__.py
+src/monitoring/cost_monitor.py
+src/monitoring/logger.py
+src/monitoring/metrics.py
 src/pdf_processing/__init__.py
 src/pdf_processing/extractor.py
 src/pdf_processing/models.py
@@ -26,11 +38,14 @@ src/polly_generation/voice_manager.py
 src/processing/__init__.py
 src/processing/batch_processor.py
 src/processing/cache_manager.py
+src/processing/pipeline_orchestrator.py
 src/storage/__init__.py
+src/storage/library_manager.py
 src/storage/local_manager.py
 src/storage/metadata.py
 src/storage/models.py
 src/storage/s3_manager.py
+tests/test_audio_description_property.py
 tests/test_batch_processing_property.py
 tests/test_batch_processing_unit.py
 tests/test_cache_manager_property.py
@@ -40,6 +55,7 @@ tests/test_character_identification_unit.py
 tests/test_character_voice_consistency_property.py
 tests/test_library_indexing_property.py
 tests/test_library_indexing_unit.py
+tests/test_library_search_filter_property.py
 tests/test_local_storage_property.py
 tests/test_local_storage_unit.py
 tests/test_metadata_persistence_property.py

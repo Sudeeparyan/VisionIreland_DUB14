@@ -1,346 +1,414 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useAppStore } from '@/lib/store';
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useAppStore, AudioItem } from "@/lib/store";
 
 interface AudioPlayerProps {
-  audioUrl?: string;
-  title?: string;
-  duration?: number;
-  onPlay?: () => void;
-  onPause?: () => void;
+  audioItem?: AudioItem;
   onEnded?: () => void;
 }
 
-export function AudioPlayer({ 
-  audioUrl, 
-  title = 'Audio Narrative',
-  duration = 0,
-  onPlay,
-  onPause,
-  onEnded 
-}: AudioPlayerProps) {
+export function AudioPlayer({ audioItem, onEnded }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  
-  const { 
-    isPlaying, 
-    setPlaying, 
-    setCurrentTime: setStoreCurrentTime 
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  const {
+    currentAudio,
+    isPlaying,
+    currentTime,
+    volume,
+    isMuted,
+    playbackRate,
+    setCurrentAudio,
+    setPlaying,
+    setCurrentTime,
+    setVolume,
+    setMuted,
+    setPlaybackRate,
   } = useAppStore();
 
-  // Format time in MM:SS format
-  const formatTime = useCallback((time: number): string => {
+  const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const audio = audioItem || currentAudio;
+
+  // Sync audio element with store state
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) return;
+
+    if (isPlaying) {
+      audioElement.play().catch((err) => {
+        console.error("Playback failed:", err);
+        setPlaying(false);
+        setError("Playback failed. Please try again.");
+      });
+    } else {
+      audioElement.pause();
+    }
+  }, [isPlaying, setPlaying]);
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) return;
+    audioElement.volume = isMuted ? 0 : volume;
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) return;
+    audioElement.playbackRate = playbackRate;
+  }, [playbackRate]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      setCurrentTime(audioElement.currentTime);
+    }
+  }, [setCurrentTime]);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      setDuration(audioElement.duration);
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setPlaying(false);
+    setCurrentTime(0);
+    onEnded?.();
+  }, [setPlaying, setCurrentTime, onEnded]);
+
+  const handleError = useCallback(() => {
+    setError(
+      "Failed to load audio. Please check your connection and try again."
+    );
+    setIsLoading(false);
+    setPlaying(false);
+  }, [setPlaying]);
+
+  const handleLoadStart = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    if (error) {
+      setError(null);
+      audioRef.current?.load();
+    }
+    setPlaying(!isPlaying);
+  }, [isPlaying, setPlaying, error]);
+
+  const handleSeek = useCallback(
+    (
+      e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>
+    ) => {
+      const progressBar = progressRef.current;
+      const audioElement = audioRef.current;
+      if (!progressBar || !audioElement || !duration) return;
+
+      let clientX: number;
+      if ("clientX" in e) {
+        clientX = e.clientX;
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const step = e.shiftKey ? 10 : 5;
+        const newTime =
+          e.key === "ArrowRight"
+            ? Math.min(currentTime + step, duration)
+            : Math.max(currentTime - step, 0);
+        audioElement.currentTime = newTime;
+        setCurrentTime(newTime);
+        return;
+      } else {
+        return;
+      }
+
+      const rect = progressBar.getBoundingClientRect();
+      const percent = (clientX - rect.left) / rect.width;
+      const newTime = percent * duration;
+      audioElement.currentTime = newTime;
+      setCurrentTime(newTime);
+    },
+    [duration, currentTime, setCurrentTime]
+  );
+
+  const handleVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newVolume = parseFloat(e.target.value);
+      setVolume(newVolume);
+      if (newVolume > 0 && isMuted) {
+        setMuted(false);
+      }
+    },
+    [setVolume, setMuted, isMuted]
+  );
+
+  const toggleMute = useCallback(() => {
+    setMuted(!isMuted);
+  }, [isMuted, setMuted]);
+
+  const handlePlaybackRateChange = useCallback(
+    (rate: number) => {
+      setPlaybackRate(rate);
+    },
+    [setPlaybackRate]
+  );
+
+  const skipBackward = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      audioElement.currentTime = Math.max(0, audioElement.currentTime - 10);
+    }
+  }, []);
+
+  const skipForward = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (audioElement && duration) {
+      audioElement.currentTime = Math.min(
+        duration,
+        audioElement.currentTime + 10
+      );
+    }
+  }, [duration]);
+
+  const formatTime = (time: number): string => {
+    if (isNaN(time) || !isFinite(time)) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }, []);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
-  // Handle play/pause
-  const togglePlayPause = useCallback(async () => {
-    if (!audioRef.current || !audioUrl) return;
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-    try {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setPlaying(false);
-        onPause?.();
-      } else {
-        setIsLoading(true);
-        await audioRef.current.play();
-        setPlaying(true);
-        setIsLoading(false);
-        onPlay?.();
-      }
-    } catch (error) {
-      console.error('Audio playback error:', error);
-      setIsLoading(false);
-      setPlaying(false);
-    }
-  }, [isPlaying, audioUrl, setPlaying, onPlay, onPause]);
+  if (!audio) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
+        <p>No audio selected. Choose an item from your library to play.</p>
+      </div>
+    );
+  }
 
-  // Handle seek
-  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!audioRef.current) return;
-    
-    const newTime = parseFloat(e.target.value);
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-    setStoreCurrentTime(newTime);
-  }, [setStoreCurrentTime]);
-
-  // Handle volume change
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-    if (newVolume > 0 && isMuted) {
-      setIsMuted(false);
-    }
-  }, [isMuted]);
-
-  // Toggle mute
-  const toggleMute = useCallback(() => {
-    if (!audioRef.current) return;
-    
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    audioRef.current.muted = newMuted;
-  }, [isMuted]);
-
-  // Handle playback rate change
-  const handlePlaybackRateChange = useCallback((rate: number) => {
-    setPlaybackRate(rate);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = rate;
-    }
-  }, []);
-
-  // Skip forward/backward
-  const skipTime = useCallback((seconds: number) => {
-    if (!audioRef.current) return;
-    
-    const newTime = Math.max(0, Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + seconds));
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-    setStoreCurrentTime(newTime);
-  }, [setStoreCurrentTime]);
-
-  // Keyboard shortcuts
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    switch (e.key) {
-      case ' ':
-        e.preventDefault();
-        togglePlayPause();
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        skipTime(-10);
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        skipTime(10);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        handleVolumeChange({ target: { value: Math.min(1, volume + 0.1).toString() } } as any);
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        handleVolumeChange({ target: { value: Math.max(0, volume - 0.1).toString() } } as any);
-        break;
-      case 'm':
-      case 'M':
-        e.preventDefault();
-        toggleMute();
-        break;
-    }
-  }, [togglePlayPause, skipTime, handleVolumeChange, volume, toggleMute]);
-
-  // Audio event handlers
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      setStoreCurrentTime(audio.currentTime);
-    };
-
-    const handleLoadStart = () => setIsLoading(true);
-    const handleCanPlay = () => setIsLoading(false);
-    const handleEnded = () => {
-      setPlaying(false);
-      onEnded?.();
-    };
-
-    const handleError = (e: Event) => {
-      console.error('Audio error:', e);
-      setIsLoading(false);
-      setPlaying(false);
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-    };
-  }, [setPlaying, setStoreCurrentTime, onEnded]);
-
-  // Set initial volume and playback rate
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      audioRef.current.playbackRate = playbackRate;
-    }
-  }, [volume, playbackRate]);
-
-  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const audioSrc =
+    audio.audioUrl || (audio.localPath ? `file://${audio.localPath}` : "");
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-sm border p-6 space-y-4"
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="region"
-      aria-label="Audio player"
-    >
+    <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+      {/* Audio element */}
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={audioSrc}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        onError={handleError}
+        onLoadStart={handleLoadStart}
         preload="metadata"
-        className="sr-only"
       />
 
-      {/* Title and metadata */}
+      {/* Title */}
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          {title}
-        </h3>
-        <p className="text-sm text-gray-500">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </p>
+        <h3 className="text-lg font-semibold text-gray-900">{audio.title}</h3>
+        {audio.characters && audio.characters.length > 0 && (
+          <p className="text-sm text-gray-600">
+            Characters: {audio.characters.join(", ")}
+          </p>
+        )}
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div
+          className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-700"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="space-y-2">
-        <div 
-          className="relative w-full h-2 bg-gray-200 rounded-full cursor-pointer"
-          onClick={(e) => {
-            if (!audioRef.current || duration === 0) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            const newTime = percent * duration;
-            audioRef.current.currentTime = newTime;
-            setCurrentTime(newTime);
-            setStoreCurrentTime(newTime);
-          }}
+        <div
+          ref={progressRef}
+          onClick={handleSeek}
+          onKeyDown={handleSeek}
+          tabIndex={0}
+          role="slider"
+          aria-label="Audio progress"
+          aria-valuemin={0}
+          aria-valuemax={duration}
+          aria-valuenow={currentTime}
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(
+            duration
+          )}`}
+          className="w-full h-2 bg-gray-200 rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
-          <div 
-            className="absolute top-0 left-0 h-full bg-blue-600 rounded-full transition-all duration-100"
-            style={{ width: `${progressPercentage}%` }}
+          <div
+            className="h-2 bg-blue-600 rounded-full transition-all duration-100"
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
-        
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          value={currentTime}
-          onChange={handleSeek}
-          className="sr-only"
-          aria-label={`Seek to position. Current time: ${formatTime(currentTime)}`}
-        />
+        <div className="flex justify-between text-sm text-gray-500">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
       </div>
 
       {/* Main controls */}
-      <div className="flex items-center justify-center space-x-4">
+      <div className="flex items-center justify-center gap-4">
         {/* Skip backward */}
         <button
-          onClick={() => skipTime(-10)}
-          disabled={!audioUrl}
-          className="p-2 text-gray-600 hover:text-blue-600 focus:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={skipBackward}
+          disabled={isLoading}
+          className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full disabled:opacity-50"
           aria-label="Skip backward 10 seconds"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.333 4z" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"
+            />
           </svg>
         </button>
 
         {/* Play/Pause */}
         <button
-          onClick={togglePlayPause}
-          disabled={!audioUrl || isLoading}
-          className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+          onClick={togglePlay}
+          disabled={isLoading && !error}
+          className="p-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
-          {isLoading ? (
-            <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+          {isLoading && !error ? (
+            <svg
+              className="w-8 h-8 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
           ) : isPlaying ? (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6" />
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
             </svg>
           ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-9-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
             </svg>
           )}
         </button>
 
         {/* Skip forward */}
         <button
-          onClick={() => skipTime(10)}
-          disabled={!audioUrl}
-          className="p-2 text-gray-600 hover:text-blue-600 focus:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={skipForward}
+          disabled={isLoading}
+          className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full disabled:opacity-50"
           aria-label="Skip forward 10 seconds"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z"
+            />
           </svg>
         </button>
       </div>
 
       {/* Secondary controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2 border-t">
         {/* Volume control */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleMute}
-            className="p-1 text-gray-600 hover:text-blue-600 focus:text-blue-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+            className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            aria-label={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted || volume === 0 ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-              </svg>
-            ) : volume < 0.5 ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                  clipRule="evenodd"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                />
               </svg>
             )}
           </button>
-          
           <input
             type="range"
-            min={0}
-            max={1}
-            step={0.1}
+            min="0"
+            max="1"
+            step="0.05"
             value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
-            className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            aria-label={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
+            className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            aria-label="Volume"
           />
         </div>
 
         {/* Playback speed */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Speed:</span>
           <select
             value={playbackRate}
-            onChange={(e) => handlePlaybackRateChange(parseFloat(e.target.value))}
-            className="text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) =>
+              handlePlaybackRateChange(parseFloat(e.target.value))
+            }
+            className="text-sm border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Playback speed"
           >
             <option value={0.5}>0.5x</option>
@@ -351,13 +419,6 @@ export function AudioPlayer({
             <option value={2}>2x</option>
           </select>
         </div>
-      </div>
-
-      {/* Keyboard shortcuts help */}
-      <div className="text-xs text-gray-500 text-center">
-        <p>
-          Keyboard shortcuts: Space (play/pause), ← → (skip 10s), ↑ ↓ (volume), M (mute)
-        </p>
       </div>
     </div>
   );

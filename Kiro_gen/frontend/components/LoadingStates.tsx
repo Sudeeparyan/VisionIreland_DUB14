@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+import React from "react";
+
+interface SpinnerProps {
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
+export function Spinner({ size = "md", className = "" }: SpinnerProps) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8',
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   return (
@@ -36,137 +38,152 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
   );
 }
 
-interface LoadingCardProps {
-  title?: string;
+interface LoadingOverlayProps {
   message?: string;
-  showProgress?: boolean;
-  progress?: number;
 }
 
-export function LoadingCard({ 
-  title = 'Loading...', 
-  message = 'Please wait while we process your request.',
-  showProgress = false,
-  progress = 0 
-}: LoadingCardProps) {
+export function LoadingOverlay({
+  message = "Loading...",
+}: LoadingOverlayProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-      <div className="flex items-center justify-center space-x-3 mb-4">
-        <LoadingSpinner size="lg" className="text-blue-600" />
-        <span className="text-lg font-medium text-gray-900">{title}</span>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="bg-white rounded-lg p-8 flex flex-col items-center shadow-xl">
+        <Spinner size="lg" className="text-blue-600" />
+        <p className="mt-4 text-gray-700 font-medium">{message}</p>
       </div>
-      
-      <p className="text-gray-600 mb-4">{message}</p>
-      
-      {showProgress && (
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-          <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          />
-        </div>
-      )}
-      
-      {showProgress && (
-        <p className="text-sm text-gray-500" aria-live="polite">
-          {progress}% complete
-        </p>
-      )}
     </div>
   );
 }
 
 interface SkeletonProps {
   className?: string;
-  rows?: number;
 }
 
-export function Skeleton({ className = '', rows = 1 }: SkeletonProps) {
+export function Skeleton({ className = "" }: SkeletonProps) {
   return (
-    <div className={`animate-pulse ${className}`}>
-      {Array.from({ length: rows }).map((_, index) => (
-        <div
-          key={index}
-          className={`bg-gray-200 rounded ${index > 0 ? 'mt-2' : ''}`}
-          style={{ height: '1rem' }}
-        />
+    <div
+      className={`animate-pulse bg-gray-200 rounded ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
+
+export function LibraryItemSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
+      <div className="flex items-start justify-between">
+        <Skeleton className="h-6 w-2/3" />
+        <Skeleton className="h-6 w-16" />
+      </div>
+      <Skeleton className="h-4 w-1/2" />
+      <div className="flex gap-2">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+        <Skeleton className="h-6 w-14 rounded-full" />
+      </div>
+      <div className="flex items-center justify-between pt-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-20 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+export function LibraryGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      aria-label="Loading library items"
+      role="status"
+    >
+      <span className="sr-only">Loading library items...</span>
+      {Array.from({ length: count }).map((_, i) => (
+        <LibraryItemSkeleton key={i} />
       ))}
     </div>
   );
 }
 
-export function LibraryCardSkeleton() {
+export function PageLoadingState({
+  message = "Loading...",
+}: {
+  message?: string;
+}) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
-      <div className="flex items-start justify-between mb-4">
-        <div className="h-4 w-4 bg-gray-200 rounded" />
-        <div className="h-6 w-16 bg-gray-200 rounded-full" />
-      </div>
-      
-      <div className="h-6 bg-gray-200 rounded mb-4" />
-      
-      <div className="space-y-3 mb-4">
-        <div>
-          <div className="h-3 w-20 bg-gray-200 rounded mb-1" />
-          <div className="flex gap-1">
-            <div className="h-6 w-16 bg-gray-200 rounded-full" />
-            <div className="h-6 w-20 bg-gray-200 rounded-full" />
-            <div className="h-6 w-12 bg-gray-200 rounded-full" />
-          </div>
+    <div
+      className="min-h-[400px] flex flex-col items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <Spinner size="lg" className="text-blue-600" />
+      <p className="mt-4 text-gray-600">{message}</p>
+    </div>
+  );
+}
+
+interface ProgressBarProps {
+  progress: number;
+  label?: string;
+  showPercentage?: boolean;
+}
+
+export function ProgressBar({
+  progress,
+  label,
+  showPercentage = true,
+}: ProgressBarProps) {
+  const percentage = Math.min(100, Math.max(0, progress));
+
+  return (
+    <div className="w-full">
+      {(label || showPercentage) && (
+        <div className="flex justify-between mb-1">
+          {label && <span className="text-sm text-gray-600">{label}</span>}
+          {showPercentage && (
+            <span className="text-sm text-gray-600" aria-hidden="true">
+              {percentage.toFixed(0)}%
+            </span>
+          )}
         </div>
-        
-        <div>
-          <div className="h-3 w-16 bg-gray-200 rounded mb-1" />
-          <div className="flex gap-1">
-            <div className="h-6 w-14 bg-gray-200 rounded-full" />
-            <div className="h-6 w-18 bg-gray-200 rounded-full" />
-          </div>
-        </div>
-      </div>
-      
-      <div className="h-3 w-24 bg-gray-200 rounded mb-4" />
-      
-      <div className="flex items-center space-x-2">
-        <div className="flex-1 h-8 bg-gray-200 rounded" />
-        <div className="h-8 w-8 bg-gray-200 rounded" />
-        <div className="h-8 w-8 bg-gray-200 rounded" />
+      )}
+      <div
+        className="w-full bg-gray-200 rounded-full h-2.5"
+        role="progressbar"
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label || "Progress"}
+      >
+        <div
+          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );
 }
 
-export function AudioPlayerSkeleton() {
+interface InlineLoadingProps {
+  message?: string;
+  className?: string;
+}
+
+export function InlineLoading({
+  message = "Loading...",
+  className = "",
+}: InlineLoadingProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4 animate-pulse">
-      <div className="text-center">
-        <div className="h-6 w-48 bg-gray-200 rounded mx-auto mb-2" />
-        <div className="h-4 w-24 bg-gray-200 rounded mx-auto" />
-      </div>
-      
-      <div className="space-y-2">
-        <div className="w-full h-2 bg-gray-200 rounded-full" />
-      </div>
-      
-      <div className="flex items-center justify-center space-x-4">
-        <div className="h-10 w-10 bg-gray-200 rounded-full" />
-        <div className="h-12 w-12 bg-gray-200 rounded-full" />
-        <div className="h-10 w-10 bg-gray-200 rounded-full" />
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="h-5 w-5 bg-gray-200 rounded" />
-          <div className="h-2 w-20 bg-gray-200 rounded" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="h-4 w-12 bg-gray-200 rounded" />
-          <div className="h-8 w-16 bg-gray-200 rounded" />
-        </div>
-      </div>
+    <div
+      className={`flex items-center ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Spinner size="sm" className="text-blue-600 mr-2" />
+      <span className="text-sm text-gray-600">{message}</span>
     </div>
   );
 }

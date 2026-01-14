@@ -1,4 +1,7 @@
+api
 bedrock_analysis
+error_handling
+monitoring
 pdf_processing
 polly_generation
 processing
