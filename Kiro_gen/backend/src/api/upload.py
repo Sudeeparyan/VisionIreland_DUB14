@@ -38,6 +38,7 @@ async def process_comic_background(
     """Background task to process comic PDF."""
     try:
         logger.info(f"Starting background processing for job {job_id}")
+        logger.info(f"PDF path: {pdf_path}, Title: {comic_title}")
         
         # Start cost tracking
         if cost_monitor:
@@ -48,13 +49,14 @@ async def process_comic_background(
             await metrics_collector.start_job_tracking(job_id)
         
         # Process the comic
+        logger.info(f"Calling pipeline_orchestrator.process_comic for job {job_id}")
         result = await pipeline_orchestrator.process_comic(
             pdf_path=pdf_path,
             comic_title=comic_title,
             job_id=job_id
         )
         
-        logger.info(f"Completed processing for job {job_id}")
+        logger.info(f"Completed processing for job {job_id}, result: {result}")
         
         # Update cost tracking
         if cost_monitor:
@@ -65,7 +67,10 @@ async def process_comic_background(
             await metrics_collector.complete_job_tracking(job_id, result)
         
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
         logger.error(f"Error processing job {job_id}: {e}")
+        logger.error(f"Full traceback: {error_traceback}")
         
         # Update error tracking
         if cost_monitor:

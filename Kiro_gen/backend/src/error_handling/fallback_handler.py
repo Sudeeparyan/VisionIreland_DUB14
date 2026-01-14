@@ -26,10 +26,10 @@ class FallbackHandler:
         """Initialize fallback handler."""
         self.fallback_models = {
             "bedrock": [
-                "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+                "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
                 "us.anthropic.claude-3-haiku-20240307-v1:0",
-                "amazon.nova-pro-v1:0",
-                "amazon.nova-lite-v1:0"
+                "us.amazon.nova-pro-v1:0",
+                "us.amazon.nova-lite-v1:0"
             ]
         }
         

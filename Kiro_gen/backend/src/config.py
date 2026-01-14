@@ -8,14 +8,20 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
 
     # AWS Configuration
-    aws_region: str = "us-east-1"
+    aws_region: str = "us-west-2"
+    aws_default_region: Optional[str] = None  # Fallback alias
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
     aws_session_token: Optional[str] = None
 
+    @property
+    def effective_aws_region(self) -> str:
+        """Get the effective AWS region, checking both AWS_REGION and AWS_DEFAULT_REGION"""
+        return self.aws_region or self.aws_default_region or "us-west-2"
+
     # Bedrock Configuration
-    bedrock_model_id_vision: str = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
-    bedrock_model_id_analysis: str = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+    bedrock_model_id_vision: str = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+    bedrock_model_id_analysis: str = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
     # Polly Configuration
     polly_engine: str = "neural"

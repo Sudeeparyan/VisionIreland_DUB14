@@ -244,11 +244,9 @@ class ApiClient {
   }
 
   async getLibrary(
-    page: number = 1,
-    limit: number = 20,
-    sortBy: 'title' | 'uploadedAt' | 'duration' = 'uploadedAt',
-    sortOrder: 'asc' | 'desc' = 'desc'
+    options: { page?: number; limit?: number; sortBy?: 'title' | 'uploadedAt' | 'duration'; sortOrder?: 'asc' | 'desc' } = {}
   ): Promise<LibraryResponse> {
+    const { page = 1, limit = 20, sortBy = 'uploadedAt', sortOrder = 'desc' } = options;
     const { promise } = this.createCancelableRequest(
       (config) => this.client.get('/library', {
         ...config,
@@ -257,7 +255,29 @@ class ApiClient {
     );
 
     const response = await promise;
-    return response.data;
+
+    // Transform backend response to frontend format
+    const backendItems = response.data.items || [];
+    const items: AudioLibraryItem[] = backendItems.map((item: any) => ({
+      id: item.id,
+      title: item.title || 'Untitled',
+      characters: item.characters || [],
+      scenes: item.scenes || [],
+      duration: item.duration || 0,
+      uploadedAt: item.upload_date || new Date().toISOString(),
+      fileSize: item.file_size || 0,
+      // Convert relative URL to absolute URL
+      audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
+      localPath: item.local_path,
+      metadata: item.metadata,
+    }));
+
+    return {
+      items,
+      total: response.data.pagination?.total || items.length,
+      page: response.data.pagination?.offset ? Math.floor(response.data.pagination.offset / limit) + 1 : page,
+      limit,
+    };
   }
 
   async searchLibrary(
@@ -279,7 +299,28 @@ class ApiClient {
     );
 
     const response = await promise;
-    return response.data;
+
+    // Transform backend response to frontend format
+    const backendItems = response.data.items || [];
+    const items: AudioLibraryItem[] = backendItems.map((item: any) => ({
+      id: item.id,
+      title: item.title || 'Untitled',
+      characters: item.characters || [],
+      scenes: item.scenes || [],
+      duration: item.duration || 0,
+      uploadedAt: item.upload_date || new Date().toISOString(),
+      fileSize: item.file_size || 0,
+      audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
+      localPath: item.local_path,
+      metadata: item.metadata,
+    }));
+
+    return {
+      items,
+      total: response.data.pagination?.total || items.length,
+      query,
+      suggestions: [],
+    };
   }
 
   async getAudio(

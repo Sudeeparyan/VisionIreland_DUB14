@@ -4,10 +4,10 @@ import json
 import logging
 from typing import Optional, Dict, Any
 from datetime import datetime
-import boto3
 from botocore.exceptions import ClientError
 
 from .models import StoredAudio, AudioMetadata, LibraryIndex
+from ..aws_clients import aws_clients
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,8 @@ class S3StorageManager:
         """
         self.bucket_name = bucket_name
         self.region = region
-        self.s3_client = boto3.client('s3', region_name=region)
+        # Use shared aws_clients with proper credentials
+        self.s3_client = aws_clients.s3
         self.storage_class = 'STANDARD'
 
     def set_storage_class(self, storage_class: str) -> None:

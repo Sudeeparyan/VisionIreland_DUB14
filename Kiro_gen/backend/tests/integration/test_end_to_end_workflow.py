@@ -419,7 +419,7 @@ class TestEndToEndWorkflow:
             # Simulate cost tracking during analysis
             await mock_cost_monitor.track_bedrock_usage(
                 job_id="test_job_tracking",
-                model_id="claude-3-5-sonnet",
+                model_id="claude-4-5-sonnet",
                 input_tokens=1000,
                 output_tokens=500
             )

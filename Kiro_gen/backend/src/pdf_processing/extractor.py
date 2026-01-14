@@ -1,4 +1,4 @@
-"""PDF extraction utilities for comic processing"""
+"""PDF extraction utilities for comic processing using PyMuPDF"""
 
 import io
 import uuid
@@ -6,14 +6,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import PyPDF2
 from PIL import Image
 
 try:
-    from pdf2image import convert_from_path
-    HAS_PDF2IMAGE = True
+    import fitz  # PyMuPDF
+    HAS_PYMUPDF = True
 except ImportError:
-    HAS_PDF2IMAGE = False
+    HAS_PYMUPDF = False
 
 try:
     import pytesseract
@@ -26,12 +25,11 @@ from .models import ComicMetadata, Panel
 
 class PDFExtractionError(Exception):
     """Raised when PDF extraction fails"""
-
     pass
 
 
 class PDFExtractor:
-    """Extracts panels from PDF files as high-quality images"""
+    """Extracts panels from PDF files as high-quality images using PyMuPDF"""
 
     # File validation constants
     MAX_FILE_SIZE_MB = 100
@@ -49,7 +47,10 @@ class PDFExtractor:
         if image_quality not in ("high", "standard"):
             raise ValueError("image_quality must be 'high' or 'standard'")
         self.image_quality = image_quality
+        # DPI for rendering: 300 for high quality, 150 for standard
         self.dpi = 300 if image_quality == "high" else 150
+        # Zoom factor for PyMuPDF (72 DPI is default)
+        self.zoom = self.dpi / 72.0
 
     def validate_file(self, file_path: Path) -> Tuple[bool, Optional[str]]:
         """
@@ -78,7 +79,7 @@ class PDFExtractor:
 
     def extract_panels(self, file_path, title: Optional[str] = None) -> Tuple[List[Panel], ComicMetadata]:
         """
-        Extract all panels from a PDF file as images
+        Extract all panels from a PDF file as images using PyMuPDF
 
         Args:
             file_path: Path to the PDF file (string or Path object)
@@ -99,150 +100,85 @@ class PDFExtractor:
         if not is_valid:
             raise PDFExtractionError(error_msg)
 
-        try:
-            with open(file_path, "rb") as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                num_pages = len(pdf_reader.pages)
-
-                if num_pages == 0:
-                    raise PDFExtractionError("PDF contains no pages")
-
-                panels = []
-                for page_num in range(num_pages):
-                    panel = self._extract_panel_from_page(pdf_reader, page_num)
-                    if panel:
-                        panels.append(panel)
-
-                if not panels:
-                    raise PDFExtractionError("No valid panels could be extracted from PDF")
-
-                # Create metadata
-                comic_title = title or file_path.stem
-                metadata = ComicMetadata(
-                    title=comic_title,
-                    total_panels=len(panels),
-                    extracted_at=datetime.now(),
-                    image_quality=self.image_quality,
-                )
-
-                return panels, metadata
-
-        except Exception as e:
-            if "no pages" in str(e).lower():
-                raise PDFExtractionError(str(e))
-            raise PDFExtractionError(f"Failed to read PDF: {str(e)}")
-
-    def _extract_panel_from_page(self, pdf_reader: PyPDF2.PdfReader, page_num: int) -> Optional[Panel]:
-        """
-        Extract a single panel from a PDF page
-
-        Args:
-            pdf_reader: PyPDF2 reader object
-            page_num: Page number (0-indexed)
-
-        Returns:
-            Panel object or None if extraction fails
-        """
-        try:
-            page = pdf_reader.pages[page_num]
-
-            # Convert PDF page to image using PIL
-            # Note: This requires pdf2image or similar, but we'll use a simpler approach
-            # by rendering the page as an image
-            image_data = self._render_page_to_image(page)
-
-            if image_data is None:
-                return None
-
-            # Get image dimensions
-            img = Image.open(io.BytesIO(image_data))
-            width, height = img.size
-
-            # Validate image dimensions
-            if width < self.MIN_IMAGE_WIDTH or height < self.MIN_IMAGE_HEIGHT:
-                return None
-
-            # Determine image format
-            image_format = "png" if self.image_quality == "high" else "jpeg"
-
-            # Extract supplementary text via OCR
-            extracted_text = self._extract_text_from_image(img)
-
-            # Create panel
-            panel = Panel(
-                id=str(uuid.uuid4()),
-                sequence_number=page_num + 1,
-                image_data=image_data,
-                image_format=image_format,
-                image_resolution={"width": width, "height": height},
-                extracted_text=extracted_text,
+        # Check if PyMuPDF is available
+        if not HAS_PYMUPDF:
+            raise PDFExtractionError(
+                "PyMuPDF (fitz) is not installed. Install it with: pip install PyMuPDF"
             )
 
-            return panel
-
-        except Exception:
-            return None
-
-    def _render_page_to_image(self, page) -> Optional[bytes]:
-        """
-        Render a PDF page to an image
-
-        Args:
-            page: PyPDF2 page object
-
-        Returns:
-            Image data as bytes or None if rendering fails
-        """
         try:
-            # Try to use pdf2image if available for high-quality rendering
-            if HAS_PDF2IMAGE:
-                return self._render_with_pdf2image(page)
+            panels = []
             
-            # Fallback: Create a placeholder image
-            # In production, this would use a proper PDF rendering library
-            img = Image.new("RGB", (800, 1000), color="white")
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format="PNG")
-            return img_bytes.getvalue()
-
-        except Exception:
-            return None
-
-    def _render_with_pdf2image(self, page) -> Optional[bytes]:
-        """
-        Render a PDF page using pdf2image library
-
-        Args:
-            page: PyPDF2 page object
-
-        Returns:
-            Image data as bytes or None if rendering fails
-        """
-        try:
-            # Get page dimensions
-            if "/MediaBox" in page:
-                media_box = page["/MediaBox"]
-                width = float(media_box[2]) - float(media_box[0])
-                height = float(media_box[3]) - float(media_box[1])
-            else:
-                width, height = 612, 792  # Default letter size
-
-            # Create image with appropriate dimensions
-            # Scale based on DPI for quality
-            scale_factor = self.dpi / 72.0  # PDF default is 72 DPI
-            img_width = int(width * scale_factor)
-            img_height = int(height * scale_factor)
-
-            # Create a white background image
-            img = Image.new("RGB", (img_width, img_height), color="white")
+            # Open PDF with PyMuPDF
+            pdf_document = fitz.open(str(file_path))
             
-            # Convert to bytes
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format="PNG")
-            return img_bytes.getvalue()
+            if pdf_document.page_count == 0:
+                pdf_document.close()
+                raise PDFExtractionError("PDF contains no pages")
+            
+            # Process each page
+            for page_num in range(pdf_document.page_count):
+                page = pdf_document[page_num]
+                
+                # Render page to image with specified zoom/DPI
+                mat = fitz.Matrix(self.zoom, self.zoom)
+                pix = page.get_pixmap(matrix=mat, alpha=False)
+                
+                # Convert to PIL Image
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                
+                # Validate image dimensions
+                if img.width < self.MIN_IMAGE_WIDTH or img.height < self.MIN_IMAGE_HEIGHT:
+                    continue
+                
+                # Convert to bytes
+                img_bytes = io.BytesIO()
+                img_format = "PNG" if self.image_quality == "high" else "JPEG"
+                img.save(img_bytes, format=img_format, quality=95 if img_format == "JPEG" else None)
+                image_data = img_bytes.getvalue()
+                
+                # Extract text via OCR if available
+                extracted_text = self._extract_text_from_image(img)
+                
+                # Also try to get text directly from PDF
+                pdf_text = page.get_text()
+                if pdf_text and pdf_text.strip():
+                    if extracted_text:
+                        extracted_text = f"{pdf_text}\n{extracted_text}"
+                    else:
+                        extracted_text = pdf_text.strip()
+                
+                # Create panel
+                panel = Panel(
+                    id=str(uuid.uuid4()),
+                    sequence_number=page_num + 1,
+                    image_data=image_data,
+                    image_format=img_format.lower(),
+                    image_resolution={"width": img.width, "height": img.height},
+                    extracted_text=extracted_text,
+                )
+                panels.append(panel)
+            
+            pdf_document.close()
 
-        except Exception:
-            return None
+            if not panels:
+                raise PDFExtractionError("No valid panels could be extracted from PDF")
+
+            # Create metadata
+            comic_title = title or file_path.stem
+            metadata = ComicMetadata(
+                title=comic_title,
+                total_panels=len(panels),
+                extracted_at=datetime.now(),
+                image_quality=self.image_quality,
+            )
+
+            return panels, metadata
+
+        except PDFExtractionError:
+            raise
+        except Exception as e:
+            raise PDFExtractionError(f"Failed to read PDF: {str(e)}")
 
     def _extract_text_from_image(self, img: Image.Image) -> Optional[str]:
         """
@@ -269,3 +205,84 @@ class PDFExtractor:
 
         except Exception:
             return None
+
+    def extract_images_from_pdf(self, file_path) -> List[bytes]:
+        """
+        Extract embedded images from PDF (not page renders).
+        
+        This extracts actual image objects embedded in the PDF,
+        which can be useful for comics that have separate image layers.
+
+        Args:
+            file_path: Path to the PDF file
+
+        Returns:
+            List of image data as bytes
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        
+        if not HAS_PYMUPDF:
+            return []
+        
+        images = []
+        try:
+            pdf_document = fitz.open(str(file_path))
+            
+            for page_num in range(pdf_document.page_count):
+                page = pdf_document[page_num]
+                image_list = page.get_images()
+                
+                for img_index, img_info in enumerate(image_list):
+                    xref = img_info[0]
+                    base_image = pdf_document.extract_image(xref)
+                    
+                    if base_image:
+                        image_data = base_image["image"]
+                        images.append(image_data)
+            
+            pdf_document.close()
+            
+        except Exception:
+            pass
+        
+        return images
+
+    def get_pdf_info(self, file_path) -> dict:
+        """
+        Get PDF metadata and information.
+
+        Args:
+            file_path: Path to the PDF file
+
+        Returns:
+            Dictionary with PDF information
+        """
+        if isinstance(file_path, str):
+            file_path = Path(file_path)
+        
+        if not HAS_PYMUPDF:
+            return {"error": "PyMuPDF not installed"}
+        
+        try:
+            pdf_document = fitz.open(str(file_path))
+            
+            info = {
+                "page_count": pdf_document.page_count,
+                "metadata": pdf_document.metadata,
+                "is_encrypted": pdf_document.is_encrypted,
+                "is_pdf": pdf_document.is_pdf,
+            }
+            
+            # Get page dimensions
+            if pdf_document.page_count > 0:
+                first_page = pdf_document[0]
+                rect = first_page.rect
+                info["page_width"] = rect.width
+                info["page_height"] = rect.height
+            
+            pdf_document.close()
+            return info
+            
+        except Exception as e:
+            return {"error": str(e)}

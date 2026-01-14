@@ -88,10 +88,12 @@ class BatchProcessor:
         """Get job by ID."""
         return self.jobs.get(job_id)
 
-    def get_job_status(self, job_id: str) -> Optional[str]:
-        """Get job status."""
-        job = self.jobs.get(job_id)
-        return job.status.value if job else None
+    def get_job_status(self, job_id: str) -> Optional[BatchJob]:
+        """Get job status.
+        
+        Returns the full BatchJob object for status checks.
+        """
+        return self.jobs.get(job_id)
 
     def start_job(self, job_id: str) -> bool:
         """Start processing a job.

@@ -13,18 +13,22 @@ class VoiceProfileManager:
         self.voice_profiles: Dict[str, VoiceProfile] = {}  # character_id -> VoiceProfile
 
     def assign_voice_profile(
-        self, character: Character, voice_id: str
+        self, character: Character, voice_id: Optional[str] = None
     ) -> VoiceProfile:
         """
         Assign a voice profile to a character.
 
         Args:
             character: Character to assign voice to
-            voice_id: Polly voice ID to use
+            voice_id: Polly voice ID to use (optional, uses character's voice profile if not provided)
 
         Returns:
             VoiceProfile for the character
         """
+        # Use provided voice_id or get from character's voice profile
+        if voice_id is None:
+            voice_id = character.voice_profile.voice_id if character.voice_profile else 'Joanna'
+        
         # Store voice assignment
         self.character_voices[character.id] = voice_id
 

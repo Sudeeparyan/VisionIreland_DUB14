@@ -124,22 +124,28 @@ class PipelineOrchestrator:
             processing_duration = (end_time - start_time).total_seconds()
             self.processing_stats['total_duration'] = processing_duration
             
+            # Build result dictionary
+            result = {
+                "audio_id": stored_audio.id,
+                "title": stored_audio.metadata.title,
+                "duration": stored_audio.metadata.total_duration,
+                "file_size": stored_audio.file_size,
+                "local_path": stored_audio.local_path,
+                "s3_url": stored_audio.s3_key if stored_audio.s3_key else None,
+                "processing_stats": self.processing_stats,
+                "job_id": job_id
+            }
+            
+            # Mark job as completed in batch processor
+            self.batch_processor.complete_job(job_id, [result])
+            
             logger.info("Comic processing completed successfully", 
                        job_id=job_id,
                        duration=processing_duration,
                        panels_processed=self.processing_stats['panels_processed'],
                        fallbacks_used=self.processing_stats['fallbacks_used'])
             
-            return {
-                "audio_id": stored_audio.id,
-                "title": stored_audio.title,
-                "duration": stored_audio.duration,
-                "file_size": stored_audio.file_size,
-                "local_path": stored_audio.local_path,
-                "s3_url": stored_audio.s3_url,
-                "processing_stats": self.processing_stats,
-                "job_id": job_id
-            }
+            return result
             
         except Exception as e:
             logger.error("Comic processing failed", 
@@ -584,14 +590,15 @@ class PipelineOrchestrator:
                 "engine": "neural"
             })
         
-        async def generate_audio():
-            return await self.polly_generator.generate_audio_segments(
+        def generate_audio():
+            # This is synchronous, not async
+            return self.polly_generator.generate_audio_segments(
                 narratives, voice_profiles
             )
         
         try:
-            # Try with retry first
-            return await self.polly_retry_handler.execute_with_retry(generate_audio)
+            # Run synchronous code - no await needed
+            return generate_audio()
             
         except Exception as e:
             logger.warning("Polly generation failed, trying fallback", 
@@ -604,8 +611,8 @@ class PipelineOrchestrator:
                 try:
                     fallback_result = await fallback_handler.handle_polly_fallback(
                         text=narrative,
-                        original_voice=voice_profile.voice_id,
-                        original_engine=voice_profile.engine,
+                        original_voice=voice_profile["voice_id"],
+                        original_engine=voice_profile["engine"],
                         error=e
                     )
                     
@@ -613,10 +620,11 @@ class PipelineOrchestrator:
                         # Create mock audio segment
                         from ..polly_generation.models import AudioSegment
                         audio_segment = AudioSegment(
+                            panel_id=f"panel_{i+1}",
                             audio_data=fallback_result,
                             duration=len(narrative) * 0.1,  # Estimate
-                            voice_id=voice_profile.voice_id,
-                            text=narrative
+                            voice_id=voice_profile["voice_id"],
+                            engine=voice_profile["engine"]
                         )
                         fallback_audio.append(audio_segment)
                         self.processing_stats['fallbacks_used'] += 1
@@ -625,10 +633,11 @@ class PipelineOrchestrator:
                         silent_audio = b'\x00' * 1024  # Silent audio data
                         from ..polly_generation.models import AudioSegment
                         audio_segment = AudioSegment(
+                            panel_id=f"panel_{i+1}",
                             audio_data=silent_audio,
                             duration=1.0,
                             voice_id="fallback",
-                            text=narrative
+                            engine="standard"
                         )
                         fallback_audio.append(audio_segment)
                         
@@ -642,10 +651,11 @@ class PipelineOrchestrator:
                     silent_audio = b'\x00' * 1024
                     from ..polly_generation.models import AudioSegment
                     audio_segment = AudioSegment(
+                        panel_id=f"panel_{i+1}",
                         audio_data=silent_audio,
                         duration=1.0,
                         voice_id="error",
-                        text="Audio generation failed"
+                        engine="standard"
                     )
                     fallback_audio.append(audio_segment)
             
@@ -702,22 +712,19 @@ class PipelineOrchestrator:
     ):
         """Store audio with S3 fallback to local storage."""
         
-        async def store_audio():
+        try:
+            # Call store_audio directly - it's already async
             return await self.library_manager.store_audio(
                 audio_segments=audio_segments,
                 metadata=AudioMetadata(
                     title=comic_metadata.title,
                     characters=[],  # Would be extracted from analysis
                     scenes=[],      # Would be extracted from analysis
-                    generated_at=datetime.now().isoformat(),
-                    model_used="claude-3-5-sonnet",  # Default model
+                    generated_at=datetime.now(),
+                    model_used="claude-4-5-sonnet",  # Default model
                     total_duration=sum(getattr(seg, 'duration', 0) for seg in audio_segments)
                 )
             )
-        
-        try:
-            # Try with retry first
-            return await self.s3_retry_handler.execute_with_retry(store_audio)
             
         except Exception as e:
             logger.warning("Storage failed, trying fallback", 
@@ -740,18 +747,30 @@ class PipelineOrchestrator:
                 
                 # Create stored audio object for fallback location
                 from ..storage.models import StoredAudio
+                
+                # Calculate total duration from segments
+                total_duration = 0.0
+                for segment in audio_segments:
+                    if hasattr(segment, 'duration'):
+                        total_duration += segment.duration
+                
+                fallback_metadata = AudioMetadata(
+                    title=comic_metadata.title,
+                    characters=[],
+                    scenes=[],
+                    generated_at=datetime.now(),
+                    model_used="claude-4-5-sonnet",
+                    total_duration=total_duration,
+                    voice_profiles={}
+                )
+                
                 return StoredAudio(
                     id=job_id,
-                    title=comic_metadata.title,
-                    local_path=fallback_location if not fallback_location.startswith('s3://') else None,
-                    s3_url=fallback_location if fallback_location.startswith('s3://') else None,
-                    duration=sum(segment.duration for segment in audio_segments),
+                    s3_key=fallback_location if fallback_location.startswith('s3://') else '',
+                    metadata=fallback_metadata,
                     file_size=len(composed_audio),
-                    metadata={
-                        "job_id": job_id,
-                        "fallback_used": True,
-                        "processing_stats": self.processing_stats
-                    }
+                    uploaded_at=datetime.now(),
+                    local_path=fallback_location if not fallback_location.startswith('s3://') else None
                 )
             else:
                 raise Exception("All storage options failed")

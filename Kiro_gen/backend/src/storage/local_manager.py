@@ -231,3 +231,34 @@ class LocalStorageManager:
         except (IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load library index locally: {e}")
             raise
+
+    async def store_audio_with_fallback(
+        self,
+        audio_data: bytes,
+        filename: str
+    ) -> str:
+        """Store audio file locally as a fallback option.
+        
+        Args:
+            audio_data: Audio file content as bytes
+            filename: Name for the audio file
+            
+        Returns:
+            Local path where the audio was stored
+        """
+        # Ensure filename has .mp3 extension
+        if not filename.endswith('.mp3'):
+            filename = f"{filename}.mp3"
+        
+        audio_path = self.audio_dir / filename
+        
+        try:
+            with open(audio_path, 'wb') as f:
+                f.write(audio_data)
+            
+            logger.info(f"Successfully saved audio fallback to {audio_path}")
+            return str(audio_path)
+            
+        except IOError as e:
+            logger.error(f"Failed to save audio fallback to {audio_path}: {e}")
+            raise

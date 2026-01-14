@@ -65,14 +65,14 @@ async def get_library(
         # Get library index
         library_index = await library_manager.get_library_index()
         
-        # Sort items
+        # Sort items - StoredAudio uses 'uploaded_at' not 'upload_date'
         reverse_sort = sort_order == "desc"
         if sort_by == "upload_date":
-            library_index.sort(key=lambda x: x.upload_date, reverse=reverse_sort)
+            library_index.sort(key=lambda x: x.uploaded_at, reverse=reverse_sort)
         elif sort_by == "title":
-            library_index.sort(key=lambda x: x.title.lower(), reverse=reverse_sort)
+            library_index.sort(key=lambda x: (x.metadata.title if x.metadata else '').lower(), reverse=reverse_sort)
         elif sort_by == "duration":
-            library_index.sort(key=lambda x: x.duration or 0, reverse=reverse_sort)
+            library_index.sort(key=lambda x: (x.metadata.total_duration if x.metadata else 0) or 0, reverse=reverse_sort)
         
         # Apply pagination
         total_items = len(library_index)
@@ -81,29 +81,46 @@ async def get_library(
         # Convert to API format
         library_items = []
         for item in items_page:
-            # Extract characters and scenes from metadata
+            # Extract info from metadata - StoredAudio.metadata is AudioMetadata
+            title = ""
+            duration = None
             characters = []
             scenes = []
+            metadata_dict = {}
+            
             if item.metadata:
-                characters = item.metadata.get('characters', [])
-                scenes = item.metadata.get('scenes', [])
-                if isinstance(characters, str):
-                    characters = [characters]
-                if isinstance(scenes, str):
-                    scenes = [scenes]
+                # AudioMetadata is a dataclass with direct attributes
+                title = getattr(item.metadata, 'title', '') or ''
+                duration = getattr(item.metadata, 'total_duration', None)
+                characters = getattr(item.metadata, 'characters', []) or []
+                scenes = getattr(item.metadata, 'scenes', []) or []
+                # Convert metadata to dict if it has to_dict method
+                if hasattr(item.metadata, 'to_dict'):
+                    metadata_dict = item.metadata.to_dict()
+                elif hasattr(item.metadata, '__dict__'):
+                    metadata_dict = vars(item.metadata)
+            
+            # Ensure characters and scenes are lists
+            if isinstance(characters, str):
+                characters = [characters]
+            if isinstance(scenes, str):
+                scenes = [scenes]
+            
+            # Generate filename from title or ID
+            filename = f"{title}.mp3" if title else f"{item.id}.mp3"
             
             library_items.append(LibraryItem(
                 id=item.id,
-                title=item.title,
-                filename=item.filename,
-                upload_date=item.upload_date,
-                duration=item.duration,
+                title=title,
+                filename=filename,
+                upload_date=item.uploaded_at,
+                duration=duration,
                 file_size=item.file_size,
-                characters=characters,
-                scenes=scenes,
+                characters=characters if characters else [],
+                scenes=scenes if scenes else [],
                 audio_url=f"/api/audio/{item.id}",
                 download_url=f"/api/audio/{item.id}?download=true",
-                metadata=item.metadata or {}
+                metadata=metadata_dict
             ))
         
         return LibraryResponse(

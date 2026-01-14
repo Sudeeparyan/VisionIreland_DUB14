@@ -41,7 +41,7 @@ class CostMonitor:
     
     # AWS pricing (approximate, as of 2024)
     BEDROCK_PRICING = {
-        "claude-3-5-sonnet": {
+        "claude-4-5-sonnet": {
             "input_per_1k_tokens": 0.003,
             "output_per_1k_tokens": 0.015
         },

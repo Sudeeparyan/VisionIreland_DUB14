@@ -33,21 +33,21 @@ export function AudioPlayer({ audioItem, onEnded }: AudioPlayerProps) {
 
   const audio = audioItem || currentAudio;
 
-  // Sync audio element with store state
+  // Reset error state when audio source changes
+  useEffect(() => {
+    setError(null);
+  }, [audio?.id]);
+
+  // Sync audio element with store state - handle pause from external sources
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
 
-    if (isPlaying) {
-      audioElement.play().catch((err) => {
-        console.error("Playback failed:", err);
-        setPlaying(false);
-        setError("Playback failed. Please try again.");
-      });
-    } else {
+    // Only handle pause - play is handled directly in togglePlay for user gesture context
+    if (!isPlaying && !audioElement.paused) {
       audioElement.pause();
     }
-  }, [isPlaying, setPlaying]);
+  }, [isPlaying]);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -82,10 +82,33 @@ export function AudioPlayer({ audioItem, onEnded }: AudioPlayerProps) {
     onEnded?.();
   }, [setPlaying, setCurrentTime, onEnded]);
 
-  const handleError = useCallback(() => {
-    setError(
-      "Failed to load audio. Please check your connection and try again."
-    );
+  const handleError = useCallback((e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+    const audioElement = e.currentTarget;
+    const errorCode = audioElement.error?.code;
+    const errorMessage = audioElement.error?.message;
+    
+    console.error("Audio error:", { 
+      code: errorCode, 
+      message: errorMessage,
+      src: audioElement.src,
+      networkState: audioElement.networkState,
+      readyState: audioElement.readyState
+    });
+    
+    let userMessage = "Failed to load audio. ";
+    if (errorCode === 1) {
+      userMessage += "The audio loading was aborted.";
+    } else if (errorCode === 2) {
+      userMessage += "A network error occurred.";
+    } else if (errorCode === 3) {
+      userMessage += "The audio format is not supported.";
+    } else if (errorCode === 4) {
+      userMessage += "The audio source is not available.";
+    } else {
+      userMessage += "Please check your connection and try again.";
+    }
+    
+    setError(userMessage);
     setIsLoading(false);
     setPlaying(false);
   }, [setPlaying]);
@@ -96,11 +119,41 @@ export function AudioPlayer({ audioItem, onEnded }: AudioPlayerProps) {
   }, []);
 
   const togglePlay = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) return;
+    
     if (error) {
       setError(null);
-      audioRef.current?.load();
+      audioElement.load();
     }
-    setPlaying(!isPlaying);
+    
+    if (isPlaying) {
+      audioElement.pause();
+      setPlaying(false);
+    } else {
+      // Play directly in the user gesture context to avoid autoplay blocking
+      audioElement.play()
+        .then(() => {
+          setPlaying(true);
+        })
+        .catch((err: DOMException) => {
+          console.error("Playback failed:", {
+            name: err.name,
+            message: err.message,
+            src: audioElement.src,
+            readyState: audioElement.readyState
+          });
+          setPlaying(false);
+          
+          if (err.name === 'NotAllowedError') {
+            setError("Playback blocked by browser. Please try again.");
+          } else if (err.name === 'NotSupportedError') {
+            setError("Audio format not supported.");
+          } else {
+            setError(`Playback failed: ${err.message || 'Please try again.'}`);
+          }
+        });
+    }
   }, [isPlaying, setPlaying, error]);
 
   const handleSeek = useCallback(
@@ -192,8 +245,35 @@ export function AudioPlayer({ audioItem, onEnded }: AudioPlayerProps) {
     );
   }
 
-  const audioSrc =
-    audio.audioUrl || (audio.localPath ? `file://${audio.localPath}` : "");
+  // Construct proper audio URL - handle relative API paths
+  const getAudioSrc = () => {
+    if (audio.audioUrl) {
+      let result: string;
+      // If it's a relative path starting with /api, prepend the API base URL
+      if (audio.audioUrl.startsWith('/api/')) {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        // Remove /api from the base URL since audioUrl already includes it
+        const baseUrl = apiBase.replace(/\/api\/?$/, '');
+        result = `${baseUrl}${audio.audioUrl}`;
+      }
+      // If it's already a full URL, use it directly
+      else if (audio.audioUrl.startsWith('http://') || audio.audioUrl.startsWith('https://')) {
+        result = audio.audioUrl;
+      }
+      // Otherwise, treat it as a relative path to the API
+      else {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const baseUrl = apiBase.replace(/\/api\/?$/, '');
+        result = `${baseUrl}/api/audio/${audio.audioUrl}`;
+      }
+      console.log('Audio URL constructed:', { original: audio.audioUrl, result });
+      return result;
+    }
+    console.warn('No audioUrl found for audio:', audio?.id, audio?.title);
+    return '';
+  };
+
+  const audioSrc = getAudioSrc();
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">

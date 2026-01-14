@@ -2,7 +2,7 @@
 
 import json
 import base64
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from .models import (
     Character,
     Scene,
@@ -18,9 +18,9 @@ from ..aws_clients import aws_clients
 class BedrockPanelAnalyzer:
     """Analyzes comic panels using Bedrock vision capabilities"""
 
-    # Bedrock model IDs
-    NOVA_PRO_MODEL = "amazon.nova-pro-v1:0"
-    CLAUDE_MODEL = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    # Bedrock model IDs - use cross-region inference profile format
+    NOVA_PRO_MODEL = "us.amazon.nova-pro-v1:0"
+    CLAUDE_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
     def __init__(self, model_id: Optional[str] = None):
         """
@@ -57,6 +57,78 @@ class BedrockPanelAnalyzer:
         )
 
         return visual_analysis
+
+    async def analyze_panels(self, panels: list, context_manager=None) -> list:
+        """
+        Analyze multiple panels in batch.
+
+        Args:
+            panels: List of panel objects with image_data attribute
+            context_manager: Optional context manager for story context
+
+        Returns:
+            List of dictionaries with visual analysis results for each panel
+        """
+        import base64
+        
+        results = []
+        context = context_manager.get_context() if context_manager else None
+        
+        for panel in panels:
+            try:
+                # Handle different panel data formats
+                if hasattr(panel, 'image_data'):
+                    image_data = panel.image_data
+                elif isinstance(panel, dict) and 'image_data' in panel:
+                    image_data = panel['image_data']
+                else:
+                    image_data = panel
+                
+                # Encode to base64 if needed
+                if isinstance(image_data, bytes):
+                    image_data = base64.b64encode(image_data).decode('utf-8')
+                
+                # Get panel ID
+                if hasattr(panel, 'id'):
+                    panel_id = panel.id
+                elif hasattr(panel, 'panel_id'):
+                    panel_id = panel.panel_id
+                elif isinstance(panel, dict):
+                    panel_id = panel.get('id', panel.get('panel_id', f'panel_{len(results)}'))
+                else:
+                    panel_id = f'panel_{len(results)}'
+                
+                # Get image format
+                image_format = 'png'
+                if hasattr(panel, 'format'):
+                    image_format = panel.format
+                elif isinstance(panel, dict):
+                    image_format = panel.get('format', 'png')
+                
+                # Analyze the panel
+                analysis = self.analyze_panel(
+                    panel_id=panel_id,
+                    image_data=image_data,
+                    image_format=image_format,
+                    context=context
+                )
+                
+                # Add panel_id to result
+                analysis['panel_id'] = panel_id
+                
+                # Context update is handled separately by the pipeline
+                
+                results.append(analysis)
+                
+            except Exception as e:
+                # Create fallback result for failed panel
+                results.append({
+                    'panel_id': panel_id if 'panel_id' in dir() else f'panel_{len(results)}',
+                    'error': str(e),
+                    **self._create_fallback_analysis()
+                })
+        
+        return results
 
     def _create_analysis_prompt(self, context=None) -> str:
         """Create a prompt for Bedrock to analyze panel visuals"""
@@ -205,3 +277,50 @@ Format your response as JSON with these exact keys:
     def reset_context(self) -> None:
         """Reset analysis context for new comic"""
         self.context = BedrockAnalysisContext()
+
+    async def analyze_panel_with_fallback(
+        self,
+        panel_data: bytes,
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Analyze panel with simplified prompt for fallback scenarios.
+        
+        Args:
+            panel_data: Panel image data as bytes
+            context: Analysis context dictionary
+            
+        Returns:
+            Dictionary with visual analysis results
+        """
+        import base64
+        
+        # Encode image data to base64
+        if isinstance(panel_data, bytes):
+            image_base64 = base64.b64encode(panel_data).decode('utf-8')
+        else:
+            image_base64 = panel_data
+        
+        # Use simplified prompt for reliability
+        simplified_prompt = """Analyze this comic panel image briefly.
+
+Provide a JSON response with:
+{
+    "narrative": "Brief description of what's happening",
+    "characters": ["list of visible characters"],
+    "scene": "location/setting",
+    "dialogue": []
+}"""
+        
+        try:
+            result = self._call_bedrock_vision(image_base64, simplified_prompt, 'png')
+            return result
+        except Exception as e:
+            # Return minimal fallback
+            panel_number = context.get("panel_number", 1)
+            return {
+                "narrative": f"Panel {panel_number} continues the story.",
+                "characters": context.get("known_characters", []),
+                "scene": context.get("current_scene", "Unknown"),
+                "dialogue": [],
+                "fallback_used": True
+            }

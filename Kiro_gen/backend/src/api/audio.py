@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 audio_router = APIRouter()
 
+# Get the backend directory for resolving relative paths
+BACKEND_DIR = Path(__file__).parent.parent.parent.resolve()
+
 
 async def stream_audio_file(file_path: str, start: int = 0, end: Optional[int] = None):
     """Stream audio file with range support."""
@@ -86,10 +89,25 @@ async def get_audio(
         
         # Get local file path
         local_path = audio_item.local_path
+        
+        # Resolve relative path to absolute path from backend directory
+        if local_path:
+            # Convert to Path object and resolve relative to backend directory
+            local_path_obj = Path(local_path)
+            if not local_path_obj.is_absolute():
+                local_path = str(BACKEND_DIR / local_path_obj)
+        
         if not local_path or not os.path.exists(local_path):
             # Try to download from S3 if not available locally
             try:
                 local_path = await library_manager.download_from_s3(audio_id)
+                if not local_path:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Audio file not available - S3 download failed"
+                    )
+            except HTTPException:
+                raise
             except Exception as e:
                 logger.error(f"Failed to download audio {audio_id} from S3: {e}")
                 raise HTTPException(
@@ -99,7 +117,11 @@ async def get_audio(
         
         # Get file info
         file_size = os.path.getsize(local_path)
-        file_name = audio_item.filename
+        # Generate filename from metadata title or use audio_id
+        if audio_item.metadata and hasattr(audio_item.metadata, 'title') and audio_item.metadata.title:
+            file_name = f"{audio_item.metadata.title}.mp3"
+        else:
+            file_name = f"{audio_id}.mp3"
         
         # Handle range requests for streaming
         range_header = request.headers.get('range')

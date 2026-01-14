@@ -58,53 +58,81 @@ async def get_job_status(job_id: str, request: Request):
         # Map internal status to API status
         status_mapping = {
             'queued': 'pending',
+            'pending': 'pending',
             'processing': 'processing',
             'completed': 'completed',
             'failed': 'failed',
             'cancelled': 'failed'
         }
         
-        api_status = status_mapping.get(job_info.status, 'unknown')
+        # job_info is a BatchJob object - access status.value
+        job_status_value = job_info.status.value if hasattr(job_info.status, 'value') else str(job_info.status)
+        api_status = status_mapping.get(job_status_value, 'unknown')
         
         # Calculate progress based on panels processed
         progress = 0
-        if job_info.total_panels > 0:
-            progress = min(100, int((job_info.panels_processed / job_info.total_panels) * 100))
+        total_panels = getattr(job_info, 'total_panels', 0)
+        panels_processed = getattr(job_info, 'processed_panels', 0)
+        if total_panels > 0:
+            progress = min(100, int((panels_processed / total_panels) * 100))
         
         # Generate message based on status
         message = ""
         if api_status == 'pending':
             message = "Job is queued for processing"
         elif api_status == 'processing':
-            message = f"Processing panels ({job_info.panels_processed}/{job_info.total_panels})"
+            message = f"Processing panels ({panels_processed}/{total_panels})"
         elif api_status == 'completed':
             message = "Processing completed successfully"
             progress = 100
         elif api_status == 'failed':
             message = "Processing failed"
         
-        # Get audio URL if completed
+        # Get audio URL and processing stats if completed
         audio_url = None
-        if api_status == 'completed' and job_info.result:
-            library_manager = request.app.state.library_manager
-            if library_manager:
-                # Try to find the audio in the library
-                library_items = await library_manager.get_library_index()
-                for item in library_items:
-                    if item.metadata.get('job_id') == job_id:
-                        audio_url = f"/api/audio/{item.id}"
-                        break
+        processing_stats_dict = None
+        result = getattr(job_info, 'results', None) or getattr(job_info, 'result', None)
+        if api_status == 'completed' and result:
+            # First check if result contains audio_id directly
+            if isinstance(result, list) and len(result) > 0:
+                first_result = result[0]
+                if isinstance(first_result, dict):
+                    if 'audio_id' in first_result:
+                        audio_url = f"/api/audio/{first_result['audio_id']}"
+                    # Extract processing_stats if available
+                    if 'processing_stats' in first_result:
+                        processing_stats_dict = first_result['processing_stats']
+                    else:
+                        processing_stats_dict = first_result
+            elif isinstance(result, dict):
+                if 'audio_id' in result:
+                    audio_url = f"/api/audio/{result['audio_id']}"
+                if 'processing_stats' in result:
+                    processing_stats_dict = result['processing_stats']
+                else:
+                    processing_stats_dict = result
+            
+            # Fall back to library search if no direct audio_id
+            if not audio_url:
+                library_manager = request.app.state.library_manager
+                if library_manager:
+                    # Try to find the audio in the library
+                    library_items = await library_manager.get_library_index()
+                    for item in library_items:
+                        if item.metadata.get('job_id') == job_id:
+                            audio_url = f"/api/audio/{item.id}"
+                            break
         
         return JobStatus(
             job_id=job_id,
             status=api_status,
             progress=progress,
             message=message,
-            created_at=job_info.created_at,
-            updated_at=job_info.updated_at,
+            created_at=getattr(job_info, 'created_at', None),
+            updated_at=getattr(job_info, 'started_at', None) or getattr(job_info, 'updated_at', None),
             audio_url=audio_url,
-            error_details=job_info.error_message if job_info.error_message else None,
-            processing_stats=job_info.result if job_info.result else None
+            error_details=getattr(job_info, 'error_message', None),
+            processing_stats=processing_stats_dict
         )
         
     except HTTPException:
