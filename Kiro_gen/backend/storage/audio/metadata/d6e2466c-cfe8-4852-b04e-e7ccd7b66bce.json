@@ -1,0 +1,13 @@
+{
+  "title": "peanuts single pagev2",
+  "characters": [
+    "Charlie Brown"
+  ],
+  "scenes": [
+    "Peanuts Scene"
+  ],
+  "generated_at": "2026-01-15T04:28:08.573982",
+  "model_used": "bypass-mode",
+  "total_duration": 60.0,
+  "voice_profiles": {}
+}

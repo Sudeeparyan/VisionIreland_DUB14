@@ -1,86 +1,44 @@
 {
   "items": [
     {
-      "id": "7d676765-c3d4-4a46-8272-1e5ca8f1f41e",
-      "s3_key": "audio/7d676765-c3d4-4a46-8272-1e5ca8f1f41e/audio.mp3",
+      "id": "d2e233dd-5799-4fb6-bff4-1e0a53b46a2d",
+      "s3_key": "audio/d2e233dd-5799-4fb6-bff4-1e0a53b46a2d/audio.mp3",
       "metadata": {
-        "title": "tmpl7lkw7f2",
-        "characters": [],
-        "scenes": [],
-        "generated_at": "2026-01-14T15:55:17.826818",
-        "model_used": "claude-4-5-sonnet",
-        "total_duration": 10.0,
-        "voice_profiles": {}
+        "title": "E2E Test Audio",
+        "characters": [
+          "Narrator"
+        ],
+        "scenes": [
+          "Test Scene"
+        ],
+        "generated_at": "2026-01-15T04:40:52.702986",
+        "model_used": "polly-neural",
+        "total_duration": 5.0,
+        "voice_profiles": {
+          "Narrator": "Matthew"
+        }
       },
-      "file_size": 156560,
-      "uploaded_at": "2026-01-14T15:55:19.273052",
-      "local_path": "storage\\audio\\audio\\7d676765-c3d4-4a46-8272-1e5ca8f1f41e.mp3"
+      "file_size": 41228,
+      "uploaded_at": "2026-01-15T04:40:54.117974",
+      "local_path": "storage\\audio\\audio\\d2e233dd-5799-4fb6-bff4-1e0a53b46a2d.mp3"
     },
     {
-      "id": "c8afc260-6070-4f60-ac6f-11bdfc83adb0",
-      "s3_key": "audio/c8afc260-6070-4f60-ac6f-11bdfc83adb0/audio.mp3",
+      "id": "c729765a-4eb2-4240-b158-bbb6fa44b7e7",
+      "s3_key": "audio/c729765a-4eb2-4240-b158-bbb6fa44b7e7/audio.mp3",
       "metadata": {
-        "title": "tmp79ooudro",
+        "title": "test-1",
         "characters": [],
         "scenes": [],
-        "generated_at": "2026-01-14T16:04:57.400996",
+        "generated_at": "2026-01-15T05:56:37.643775",
         "model_used": "claude-4-5-sonnet",
-        "total_duration": 10.0,
+        "total_duration": 44.0,
         "voice_profiles": {}
       },
-      "file_size": 156560,
-      "uploaded_at": "2026-01-14T16:04:58.966524",
-      "local_path": "storage\\audio\\audio\\c8afc260-6070-4f60-ac6f-11bdfc83adb0.mp3"
-    },
-    {
-      "id": "44b0ee2c-8987-4ca8-8b16-21d950ff5043",
-      "s3_key": "audio/44b0ee2c-8987-4ca8-8b16-21d950ff5043/audio.mp3",
-      "metadata": {
-        "title": "tmpxs7fk1b_",
-        "characters": [],
-        "scenes": [],
-        "generated_at": "2026-01-14T16:15:28.229135",
-        "model_used": "claude-4-5-sonnet",
-        "total_duration": 10.0,
-        "voice_profiles": {}
-      },
-      "file_size": 156560,
-      "uploaded_at": "2026-01-14T16:15:30.961385",
-      "local_path": "storage\\audio\\audio\\44b0ee2c-8987-4ca8-8b16-21d950ff5043.mp3"
-    },
-    {
-      "id": "bb864b1e-2365-4b58-9425-5ae0fcf4ecd9",
-      "s3_key": "audio/bb864b1e-2365-4b58-9425-5ae0fcf4ecd9/audio.mp3",
-      "metadata": {
-        "title": "tmpgogaw3lw",
-        "characters": [],
-        "scenes": [],
-        "generated_at": "2026-01-14T16:28:32.718242",
-        "model_used": "claude-4-5-sonnet",
-        "total_duration": 1.0,
-        "voice_profiles": {}
-      },
-      "file_size": 15656,
-      "uploaded_at": "2026-01-14T16:28:34.952196",
-      "local_path": "storage\\audio\\audio\\bb864b1e-2365-4b58-9425-5ae0fcf4ecd9.mp3"
-    },
-    {
-      "id": "cb0ad29c-fd3c-4d3e-b194-853d2bec4de6",
-      "s3_key": "audio/cb0ad29c-fd3c-4d3e-b194-853d2bec4de6/audio.mp3",
-      "metadata": {
-        "title": "tmpu41342xt",
-        "characters": [],
-        "scenes": [],
-        "generated_at": "2026-01-14T16:45:29.899360",
-        "model_used": "claude-4-5-sonnet",
-        "total_duration": 10.0,
-        "voice_profiles": {}
-      },
-      "file_size": 156560,
-      "uploaded_at": "2026-01-14T16:45:32.808918",
-      "local_path": "storage\\audio\\audio\\cb0ad29c-fd3c-4d3e-b194-853d2bec4de6.mp3"
+      "file_size": 282680,
+      "uploaded_at": "2026-01-15T05:56:39.584167",
+      "local_path": "storage\\audio\\audio\\c729765a-4eb2-4240-b158-bbb6fa44b7e7.mp3"
     }
   ],
-  "last_updated": "2026-01-14T16:45:33.209878",
-  "total_size": 641896
+  "last_updated": "2026-01-15T05:56:39.964326",
+  "total_size": 1075536
 }

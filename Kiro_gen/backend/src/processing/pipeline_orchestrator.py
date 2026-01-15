@@ -98,6 +98,10 @@ class PipelineOrchestrator:
         try:
             # Step 1: Extract panels from PDF with error handling
             panels, comic_metadata = await self._extract_panels_with_retry(pdf_path)
+            
+            # Override the title with the user-provided comic_title
+            comic_metadata.title = comic_title
+            
             logger.info("Extracted panels from PDF", 
                        job_id=job_id, 
                        panel_count=len(panels))
@@ -557,21 +561,75 @@ class PipelineOrchestrator:
         analysis_results: List[Dict[str, Any]], 
         job_id: str
     ) -> List[str]:
-        """Generate narratives with retry logic."""
+        """Generate narratives from analysis results using NarrativeGenerator."""
         
-        async def generate_narratives():
-            return [result.get("narrative", "") for result in analysis_results]
+        narratives = []
         
-        try:
-            return await self.bedrock_retry_handler.execute_with_retry(generate_narratives)
-        except Exception as e:
-            logger.warning("Narrative generation failed, using analysis results", 
-                          job_id=job_id, 
-                          error=str(e))
-            
-            # Fallback to using analysis results directly
-            return [result.get("narrative", f"Panel {i+1}.") 
-                   for i, result in enumerate(analysis_results)]
+        for i, result in enumerate(analysis_results):
+            try:
+                # Check if narrative is already provided (from fallback)
+                if result.get("narrative"):
+                    narratives.append(result["narrative"])
+                    continue
+                
+                # Build narrative from analysis components
+                narrative_parts = []
+                
+                # Add scene description
+                scene = result.get("scene", {})
+                if isinstance(scene, dict):
+                    location = scene.get("location", "")
+                    visual_desc = scene.get("visual_description", "")
+                    if location or visual_desc:
+                        scene_text = f"The scene shows {location}. {visual_desc}".strip()
+                        narrative_parts.append(scene_text)
+                elif isinstance(scene, str) and scene:
+                    narrative_parts.append(f"The scene shows {scene}.")
+                
+                # Add action description
+                action = result.get("action_description", "")
+                if action:
+                    narrative_parts.append(action)
+                
+                # Add character descriptions
+                characters = result.get("characters", [])
+                if characters:
+                    if isinstance(characters[0], dict):
+                        char_names = [c.get("name", "A character") for c in characters[:3]]
+                    else:
+                        char_names = characters[:3]
+                    if char_names:
+                        narrative_parts.append(f"{', '.join(char_names)} are present.")
+                
+                # Add dialogue
+                dialogue = result.get("dialogue", [])
+                if dialogue:
+                    for line in dialogue[:2]:  # Limit to 2 dialogue lines
+                        if isinstance(line, dict):
+                            char = line.get("character", "Someone")
+                            text = line.get("text", "")
+                            if text:
+                                narrative_parts.append(f'{char} says, "{text}"')
+                
+                # Add mood if available
+                mood = result.get("mood", "")
+                if mood and mood != "neutral":
+                    narrative_parts.append(f"The mood is {mood}.")
+                
+                # Combine parts into narrative
+                if narrative_parts:
+                    full_narrative = " ".join(narrative_parts)
+                else:
+                    full_narrative = f"Panel {i+1} continues the story."
+                
+                narratives.append(full_narrative)
+                
+            except Exception as e:
+                logger.warning(f"Failed to generate narrative for panel {i+1}: {e}")
+                narratives.append(f"Panel {i+1} continues the story.")
+        
+        logger.info(f"Generated {len(narratives)} narratives for job {job_id}")
+        return narratives
 
     async def _generate_audio_with_fallback(
         self, 

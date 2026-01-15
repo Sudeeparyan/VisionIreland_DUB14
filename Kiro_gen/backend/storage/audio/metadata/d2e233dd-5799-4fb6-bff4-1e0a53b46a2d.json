@@ -1,0 +1,15 @@
+{
+  "title": "E2E Test Audio",
+  "characters": [
+    "Narrator"
+  ],
+  "scenes": [
+    "Test Scene"
+  ],
+  "generated_at": "2026-01-15T04:40:52.702986",
+  "model_used": "polly-neural",
+  "total_duration": 5.0,
+  "voice_profiles": {
+    "Narrator": "Matthew"
+  }
+}

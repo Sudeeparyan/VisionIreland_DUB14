@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import TeamSection from '../components/TeamSection';
 
 export default function Home() {
   return (
@@ -123,6 +124,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <TeamSection />
     </div>
   );
 }

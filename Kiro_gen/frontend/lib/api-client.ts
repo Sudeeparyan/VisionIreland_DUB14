@@ -258,19 +258,32 @@ class ApiClient {
 
     // Transform backend response to frontend format
     const backendItems = response.data.items || [];
-    const items: AudioLibraryItem[] = backendItems.map((item: any) => ({
-      id: item.id,
-      title: item.title || 'Untitled',
-      characters: item.characters || [],
-      scenes: item.scenes || [],
-      duration: item.duration || 0,
-      uploadedAt: item.upload_date || new Date().toISOString(),
-      fileSize: item.file_size || 0,
-      // Convert relative URL to absolute URL
-      audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
-      localPath: item.local_path,
-      metadata: item.metadata,
-    }));
+    const items: AudioLibraryItem[] = backendItems.map((item: any) => {
+      // Use original filename from metadata if available, otherwise use title
+      let displayTitle = item.metadata?.originalFilename || item.title || 'Untitled';
+
+      // Remove .pdf extension for cleaner display
+      if (displayTitle.toLowerCase().endsWith('.pdf')) {
+        displayTitle = displayTitle.slice(0, -4);
+      }
+
+      // Remove temp prefixes (e.g., "tmp", "temp_", random prefixes)
+      displayTitle = displayTitle.replace(/^(tmp|temp)[_-]?/i, '');
+
+      return {
+        id: item.id,
+        title: displayTitle,
+        characters: item.characters || [],
+        scenes: item.scenes || [],
+        duration: item.duration || 0,
+        uploadedAt: item.upload_date || new Date().toISOString(),
+        fileSize: item.file_size || 0,
+        // Convert relative URL to absolute URL
+        audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
+        localPath: item.local_path,
+        metadata: item.metadata,
+      };
+    });
 
     return {
       items,
@@ -302,18 +315,31 @@ class ApiClient {
 
     // Transform backend response to frontend format
     const backendItems = response.data.items || [];
-    const items: AudioLibraryItem[] = backendItems.map((item: any) => ({
-      id: item.id,
-      title: item.title || 'Untitled',
-      characters: item.characters || [],
-      scenes: item.scenes || [],
-      duration: item.duration || 0,
-      uploadedAt: item.upload_date || new Date().toISOString(),
-      fileSize: item.file_size || 0,
-      audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
-      localPath: item.local_path,
-      metadata: item.metadata,
-    }));
+    const items: AudioLibraryItem[] = backendItems.map((item: any) => {
+      // Use original filename from metadata if available, otherwise use title
+      let displayTitle = item.metadata?.originalFilename || item.title || 'Untitled';
+
+      // Remove .pdf extension for cleaner display
+      if (displayTitle.toLowerCase().endsWith('.pdf')) {
+        displayTitle = displayTitle.slice(0, -4);
+      }
+
+      // Remove temp prefixes (e.g., "tmp", "temp_", random prefixes)
+      displayTitle = displayTitle.replace(/^(tmp|temp)[_-]?/i, '');
+
+      return {
+        id: item.id,
+        title: displayTitle,
+        characters: item.characters || [],
+        scenes: item.scenes || [],
+        duration: item.duration || 0,
+        uploadedAt: item.upload_date || new Date().toISOString(),
+        fileSize: item.file_size || 0,
+        audioUrl: item.audio_url ? `${API_BASE_URL}${item.audio_url.replace('/api', '')}` : `${API_BASE_URL}/audio/${item.id}`,
+        localPath: item.local_path,
+        metadata: item.metadata,
+      };
+    });
 
     return {
       items,
