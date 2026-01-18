@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\bedrock_analysis\panel_analyzer.py
-# hypothesis_version: 6.150.1
-
-['action_description', 'atmosphere', 'audio_description', 'character', 'characters', 'color_palette', 'colors', 'dialogue', 'emotion', 'lighting', 'location', 'mood', 'objects', 'png', 'scene', 'scene_description', 'spatial_layout', 'text', 'time_of_day', 'utf-8', 'visual_description']

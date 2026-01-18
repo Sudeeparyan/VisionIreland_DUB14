@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\processing\batch_processor.py
-# hypothesis_version: 6.150.1
-
-['completed', 'completed_at', 'created_at', 'error_message', 'failed', 'id', 'pdf_path', 'pending', 'processed_panels', 'processing', 'results', 'started_at', 'status', 'total_panels']

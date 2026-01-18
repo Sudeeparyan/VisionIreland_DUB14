@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\monitoring\metrics.py
-# hypothesis_version: 6.150.1
-
-[0.0, -1000, 300, 1000, 1024, '/', 'active_jobs', 'api_metrics', 'audio_duration', 'avg_response_time_ms', 'bedrock', 'character_count', 'completed', 'completed_jobs', 'cpu_percent', 'disk_percent', 'disk_used_gb', 'error', 'error_count', 'error_summary', 'failed', 'failed_jobs', 'fatal', 'file_size', 'job_summary', 'max_response_time_ms', 'memory_percent', 'memory_used_mb', 'min_response_time_ms', 'panels_per_second', 'performance', 'polly', 'response_time_ms', 'running', 'running_jobs', 's3', 'service', 'success_rate', 'system_metrics', 'timestamp', 'total_calls', 'total_jobs']

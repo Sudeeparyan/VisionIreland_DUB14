@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\api\upload.py
-# hypothesis_version: 6.150.1
-
-[400, 500, 1024, '.pdf', '/upload', 'File is empty', 'application/pdf', 'temp_path']

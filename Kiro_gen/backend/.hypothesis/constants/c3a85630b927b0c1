@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\monitoring\logger.py
-# hypothesis_version: 6.150.1
-
-[10485760, '%Y-%m-%d %H:%M:%S', '()', '+00:00', 'ERROR', 'INFO', 'Logging configured', 'WARNING', 'Z', 'args', 'backupCount', 'boto3', 'botocore', 'class', 'console', 'created', 'default', 'error_file', 'errors.log', 'exc_info', 'exc_text', 'exception', 'file', 'filename', 'formatter', 'formatters', 'funcName', 'function', 'getMessage', 'handlers', 'json', 'level', 'levelname', 'levelno', 'line', 'lineno', 'log_dir', 'log_format', 'log_level', 'logger', 'loggers', 'logs', 'maxBytes', 'message', 'module', 'msecs', 'msg', 'name', 'pathname', 'process', 'processName', 'propagate', 'relativeCreated', 'root', 'src', 'stack_info', 'stream', 'thread', 'threadName', 'timestamp', 'urllib3', 'uvicorn', 'uvicorn.access', 'version']

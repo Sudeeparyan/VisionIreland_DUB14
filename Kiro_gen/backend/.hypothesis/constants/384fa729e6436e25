@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\api\audio.py
-# hypothesis_version: 6.150.1
-
-[206, 404, 416, 500, 503, 8192, '-', '/audio/{audio_id}', 'Accept-Ranges', 'Content-Disposition', 'Content-Length', 'Content-Range', 'Content-Type', 'audio/mpeg', 'audio_id', 'bytes', 'bytes=', 'duration', 'file_size', 'filename', 'id', 'message', 'metadata', 'range', 'rb', 'title', 'upload_date']

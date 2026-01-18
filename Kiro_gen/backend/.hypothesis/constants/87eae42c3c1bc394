@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\monitoring\cost_monitor.py
-# hypothesis_version: 6.150.1
-
-[0.0, 4e-06, 1.6e-05, 0.0008, 0.003, 0.0032, 0.0125, 0.015, 0.023, 1.0, 10.0, 50.0, 500.0, 1000, 'Closing cost monitor', 'alerts', 'bedrock', 'claude', 'claude-3-5-sonnet', 'completed', 'completed_jobs', 'cost', 'daily_cost_usd', 'daily_threshold', 'daily_threshold_usd', 'date', 'failed', 'failed_jobs', 'input_per_1k_tokens', 'intelligent_tiering', 'job_id', 'job_threshold', 'job_threshold_usd', 'monthly_cost_usd', 'neural', 'nova-pro', 'output_per_1k_tokens', 'polly', 'running', 's3', 'service_breakdown', 'standard', 'summary', 'threshold', 'thresholds', 'timestamp', 'total_api_calls', 'total_characters', 'total_cost_usd', 'total_input_tokens', 'total_jobs', 'total_output_tokens', 'type']

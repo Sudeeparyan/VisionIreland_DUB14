@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\bedrock_analysis\analyzer.py
-# hypothesis_version: 6.150.1
-
-[0.7, 2048, 'Action unclear', 'Known Characters:', 'Known Scenes:', 'Unknown location', 'action_description', 'amazon.nova-pro-v1:0', 'atmosphere', 'base64', 'characters', 'color_palette', 'colors', 'content', 'data', 'dialogue', 'error', 'image', 'image/png', 'lighting', 'location', 'maxTokens', 'media_type', 'message', 'mood', 'name', 'neutral', 'objects', 'output', 'panel_id', 'png', 'role', 'scene', 'sequence_number', 'source', 'spatial_layout', 'temperature', 'text', 'time_of_day', 'type', 'user', 'utf-8', 'visual_description']

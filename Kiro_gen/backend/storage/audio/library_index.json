@@ -37,8 +37,24 @@
       "file_size": 282680,
       "uploaded_at": "2026-01-15T05:56:39.584167",
       "local_path": "storage\\audio\\audio\\c729765a-4eb2-4240-b158-bbb6fa44b7e7.mp3"
+    },
+    {
+      "id": "183d2b9f-197f-4bc2-973a-3208d8ef9ba4",
+      "s3_key": "",
+      "metadata": {
+        "title": "test-1",
+        "characters": [],
+        "scenes": [],
+        "generated_at": "2026-01-18T07:42:33.683712",
+        "model_used": "claude-4-5-sonnet",
+        "total_duration": 10.0,
+        "voice_profiles": {}
+      },
+      "file_size": 156560,
+      "uploaded_at": "2026-01-18T07:42:35.684281",
+      "local_path": "storage\\audio\\audio\\183d2b9f-197f-4bc2-973a-3208d8ef9ba4.mp3"
     }
   ],
-  "last_updated": "2026-01-15T05:56:39.964326",
-  "total_size": 1075536
+  "last_updated": "2026-01-18T07:42:35.685326",
+  "total_size": 1232096
 }

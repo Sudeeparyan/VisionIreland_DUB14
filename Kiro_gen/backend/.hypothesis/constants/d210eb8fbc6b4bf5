@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\processing\cache_manager.py
-# hypothesis_version: 6.150.1
-
-[1000, 3600, 'Cache cleared', 'created_at', 'expired_entries', 'key', 'max_size', 'total_entries', 'ttl_seconds', 'utilization', 'value']

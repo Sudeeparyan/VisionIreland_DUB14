@@ -1,4 +1,0 @@
-# file: D:\AI\VisionIreland_DUB14\Kiro_gen\backend\src\api\jobs.py
-# hypothesis_version: 6.150.1
-
-[100, 404, 500, 503, '/jobs', '/jobs/{job_id}', 'Processing failed', 'cancelled', 'completed', 'created_at', 'failed', 'has_more', 'job_id', 'jobs', 'limit', 'message', 'offset', 'pagination', 'pending', 'processing', 'progress', 'queued', 'status', 'total', 'unknown', 'updated_at']

@@ -3,18 +3,17 @@
 interface TeamMember {
   name: string;
   email: string;
-  role: string;
 }
 
 const teamMembers: TeamMember[] = [
-  { name: 'Sudeep Aryan', email: 'sudeeparyang@gmail.com', role: 'Lead Developer' },
-  { name: 'Varvara Murphy', email: 'vvmurphy@amazon.com', role: 'Project Coordinator' },
-  { name: 'Sean Doran', email: 'sean.doran@vi.ie', role: 'Accessibility Specialist' },
-  { name: 'Borja Martin-Lunas', email: 'Borja.Martinlunas@dentsu.com', role: 'UX Designer' },
-  { name: 'Enda Kenny', email: 'endakenn@amazon.com', role: 'Cloud Architect' },
-  { name: 'Eoin Hamdam', email: 'eoin.hamdam@boi.com', role: 'Backend Developer' },
-  { name: 'Bernadette Fitzsimons', email: 'bfitzsimons@merative.com', role: 'QA Engineer' },
-  { name: 'Lina Joe', email: 'ombacchuwargad@gmail.com', role: 'AI/ML Engineer' },
+  { name: 'Sudeep Aryan', email: 'sudeeparyang@gmail.com' },
+  { name: 'Varvara Murphy', email: 'vvmurphy@amazon.com' },
+  { name: 'Sean Doran', email: 'sean.doran@vi.ie' },
+  { name: 'Borja Martin-Lunas', email: 'Borja.Martinlunas@dentsu.com' },
+  { name: 'Enda Kenny', email: 'endakenn@amazon.com' },
+  { name: 'Eoin Hamdam', email: 'eoin.hamdam@boi.com' },
+  { name: 'Bernadette Fitzsimons', email: 'bfitzsimons@merative.com' },
+  { name: 'Lina Joe', email: 'ombacchuwargad@gmail.com' },
 ];
 
 export default function TeamSection() {
@@ -55,7 +54,6 @@ export default function TeamSection() {
               </div>
               <div className="ml-3">
                 <p className="font-semibold text-gray-900 text-sm">{member.name}</p>
-                <p className="text-xs text-indigo-600">{member.role}</p>
               </div>
             </div>
             <a
